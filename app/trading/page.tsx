@@ -1,12 +1,51 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Header from "@/components/header"
+import TradeModal from "@/components/trade-modal"
 import { BarChart3, TrendingUp, TrendingDown } from "lucide-react"
+import { fetchCryptoPrice } from "@/lib/price-service"
 
 export default function TradingPage() {
   const [selectedPrediction, setSelectedPrediction] = useState<"up" | "down" | null>(null)
   const [inProgressTab, setInProgressTab] = useState(true)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [direction, setDirection] = useState<"up" | "down">("up")
+  const [price, setPrice] = useState(98000) // Updated fallback price
+  const [previousPrice, setPreviousPrice] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  const pair = { symbol: "BTC/USDT", price }
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchCryptoPrice("btc")
+        setPrice(prev => {
+          setPreviousPrice(prev)
+          return data.price
+        })
+      } catch (error) {
+        console.error("Failed to fetch BTC price:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPrice()
+    const interval = setInterval(fetchPrice, 30000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const priceChange = previousPrice ? ((price - previousPrice) / previousPrice) * 100 : 0
+
+  const handlePrediction = (dir: "up" | "down") => {
+    setDirection(dir)
+    setSelectedPrediction(dir)
+    setIsModalOpen(true)
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -18,8 +57,10 @@ export default function TradingPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">BTC/USDT</h1>
             <div className="flex items-center gap-4">
-              <span className="text-2xl font-bold">102,863.78</span>
-              <span className="text-green-400">+1.10%</span>
+              <span className="text-2xl font-bold">{loading ? "Loading..." : price.toLocaleString()}</span>
+              {!loading && <span className={priceChange >= 0 ? "text-green-400" : "text-red-400"}>
+                {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}%
+              </span>}
             </div>
           </div>
           <div className="text-sm text-muted-foreground space-y-1 mt-4 md:mt-0">
@@ -49,7 +90,7 @@ export default function TradingPage() {
         {/* Prediction Buttons */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button
-            onClick={() => setSelectedPrediction("up")}
+            onClick={() => handlePrediction("up")}
             className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-lg transition-all ${
               selectedPrediction === "up"
                 ? "bg-green-500 text-white scale-105"
@@ -60,7 +101,7 @@ export default function TradingPage() {
             Up
           </button>
           <button
-            onClick={() => setSelectedPrediction("down")}
+            onClick={() => handlePrediction("down")}
             className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-lg transition-all ${
               selectedPrediction === "down"
                 ? "bg-red-500 text-white scale-105"
@@ -96,6 +137,13 @@ export default function TradingPage() {
           <div className="text-center py-8 text-muted-foreground">No In Progress Orders</div>
         </div>
       </main>
+
+      <TradeModal
+        pair={pair}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        direction={direction}
+      />
     </div>
   )
 }

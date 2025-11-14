@@ -7,8 +7,49 @@ export default function WithdrawPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
   const [amount, setAmount] = useState("")
   const [withdrawAddress, setWithdrawAddress] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const cryptoOptions = ["BTC", "ETH", "USDT"]
+
+  const handleWithdraw = async () => {
+    if (!amount || !withdrawAddress) {
+      setError("Please enter amount and address")
+      return
+    }
+    setLoading(true)
+    setError("")
+    try {
+      const token = localStorage.getItem("token")
+      const userId = localStorage.getItem("userId")
+      const response = await fetch("http://localhost:3001/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId,
+          amount: parseFloat(amount),
+          currency: selectedCrypto,
+          transactionType: "SELL",
+          address: withdrawAddress,
+        }),
+      })
+      if (response.ok) {
+        alert("Withdrawal request submitted successfully")
+        setAmount("")
+        setWithdrawAddress("")
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to submit withdrawal")
+      }
+    } catch (err) {
+      setError("Failed to submit withdrawal")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -102,8 +143,14 @@ export default function WithdrawPage() {
           </p>
         </div>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-lg text-sm mb-4">{error}</div>
+        )}
+
         {/* CTA Button */}
-        <button className="w-full btn-success py-4 text-lg">Confirm Withdrawal</button>
+        <button onClick={handleWithdraw} disabled={loading} className="w-full btn-success py-4 text-lg">
+          {loading ? "Processing..." : "Confirm Withdrawal"}
+        </button>
       </main>
     </div>
   )

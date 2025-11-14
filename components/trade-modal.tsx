@@ -7,12 +7,47 @@ interface TradeModalProps {
   pair: { symbol: string; price: number }
   isOpen: boolean
   onClose: () => void
+  direction: "up" | "down"
 }
 
-export default function TradeModal({ pair, isOpen, onClose }: TradeModalProps) {
+export default function TradeModal({ pair, isOpen, onClose, direction }: TradeModalProps) {
   const [selectedTime, setSelectedTime] = useState("30s")
   const [isLeverage, setIsLeverage] = useState(false)
   const [amount, setAmount] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleConfirm = async () => {
+    if (!amount) return
+    setLoading(true)
+    try {
+      const token = localStorage.getItem("token")
+      const userId = localStorage.getItem("userId")
+      const response = await fetch("http://localhost:3001/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId,
+          amount: parseFloat(amount),
+          currency: "USDT", // Assuming trading in USDT
+          type: direction === "up" ? "BUY" : "SELL",
+        }),
+      })
+      if (response.ok) {
+        alert("Order placed successfully")
+        onClose()
+        setAmount("")
+      } else {
+        alert("Failed to place order")
+      }
+    } catch (err) {
+      alert("Failed to place order")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -108,7 +143,9 @@ export default function TradeModal({ pair, isOpen, onClose }: TradeModalProps) {
           </div>
         </div>
 
-        <button className="btn-primary">Confirm Trade</button>
+        <button onClick={handleConfirm} disabled={loading} className="btn-primary">
+          {loading ? "Placing Order..." : "Confirm Trade"}
+        </button>
       </div>
     </div>
   )

@@ -6,9 +6,18 @@ import Link from "next/link"
 export default function DepositPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
   const [isDragging, setIsDragging] = useState(false)
-
-  const address = "bc1qwwqj29x5hhrwy6360l0megpiq7d4ul5u6pm8x"
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
   const cryptos = ["BTC", "ETH", "USDT"]
+
+  // Static deposit addresses
+  const addresses = {
+    BTC: "bc1qcxukz8g4xf9ss70jj94g637pam73qqnhaf9c53",
+    ETH: "0xc1958a4073c980F1D658E6C425Eb6FfFeF27a082",
+    USDT: "0xc1958a4073c980F1D658E6C425Eb6FfFeF27a082"
+  }
+
+  const address = addresses[selectedCrypto as keyof typeof addresses]
 
   const copyAddress = () => {
     navigator.clipboard.writeText(address)
@@ -60,19 +69,13 @@ export default function DepositPage() {
           </div>
         </div>
 
-        {/* Network Selection */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
-          <label className="block text-sm font-medium mb-3">Network</label>
-          <p className="text-foreground">Bitcoin Network</p>
-        </div>
-
         {/* Deposit Address */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
           <label className="block text-sm font-medium mb-3">Deposit Address</label>
           <div className="flex items-center gap-3 bg-input border border-border rounded-lg p-4">
             <code className="flex-1 text-sm font-mono text-muted-foreground break-all">{address}</code>
             <button
-              onClick={copyAddress}
+              onClick={() => navigator.clipboard.writeText(address)}
               className="px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/80 transition-colors text-sm font-medium"
             >
               Copy
@@ -82,7 +85,7 @@ export default function DepositPage() {
 
         {/* Upload Proof */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
-          <label className="block text-sm font-medium mb-4">Upload Deposit Proof</label>
+          <label className="block text-sm font-medium mb-4">Upload Deposit Proof (Screenshot)</label>
           <div
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={() => setIsDragging(false)}
@@ -94,8 +97,55 @@ export default function DepositPage() {
             <div className="text-4xl mb-3">📁</div>
             <p className="text-foreground font-medium">Upload Proof</p>
             <p className="text-sm text-muted-foreground mt-1">or drag and drop</p>
-            <input id="file-input" type="file" hidden />
+            {file && <p className="text-sm text-primary mt-2">{file.name}</p>}
+            <input
+              id="file-input"
+              type="file"
+              hidden
+              accept="image/*,.pdf"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
           </div>
+          {file && (
+            <button
+              onClick={async () => {
+                if (!file) {
+                  alert("Please select a file")
+                  return
+                }
+                setUploading(true)
+                const formData = new FormData()
+                formData.append("userId", localStorage.getItem("userId")!)
+                formData.append("currency", selectedCrypto)
+                formData.append("address", address)
+                formData.append("proof", file)
+                try {
+                  const token = localStorage.getItem("token")
+                  const response = await fetch("http://localhost:3001/payments/create", {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: formData,
+                  })
+                  if (response.ok) {
+                    alert("Deposit proof submitted successfully")
+                    setFile(null)
+                  } else {
+                    alert("Failed to submit deposit proof")
+                  }
+                } catch (err) {
+                  alert("Failed to submit deposit proof")
+                } finally {
+                  setUploading(false)
+                }
+              }}
+              disabled={uploading}
+              className="w-full mt-4 btn-primary"
+            >
+              {uploading ? "Submitting..." : "Submit Deposit Proof"}
+            </button>
+          )}
         </div>
 
         {/* Warning Banner */}

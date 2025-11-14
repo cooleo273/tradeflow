@@ -1,13 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 
 export default function ProfilePage() {
-  const [balance] = useState(-148.08)
+  const [balance, setBalance] = useState(0)
+  const [loading, setLoading] = useState(true)
   const userEmail =
     typeof window !== "undefined" ? localStorage.getItem("userEmail") || "user@example.com" : "user@example.com"
   const userName = userEmail.split("@")[0]
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const userId = localStorage.getItem("userId")
+        const response = await fetch(`http://localhost:3001/transactions?userId=${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (response.ok) {
+          const transactions = await response.json()
+          // Assuming BUY increases balance, SELL decreases
+          const bal = transactions.reduce((sum: number, tx: any) => {
+            return tx.transactionType === "BUY" ? sum + tx.amount : sum - tx.amount
+          }, 0)
+          setBalance(bal)
+        }
+      } catch (err) {
+        console.error("Failed to fetch balance")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBalance()
+  }, [])
 
   const menuItems = [
     { label: "Top-up Rewards", icon: "🎁" },
@@ -51,7 +79,9 @@ export default function ProfilePage() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <p className="text-muted-foreground text-sm mb-1">Account Balance</p>
-              <h2 className="text-4xl font-bold text-blue-300">${balance.toFixed(2)} USDT</h2>
+              <h2 className="text-4xl font-bold text-blue-300">
+                {loading ? "Loading..." : `$${balance.toFixed(2)} USDT`}
+              </h2>
             </div>
             <div className="flex gap-3">
               <Link href="/deposit">
@@ -91,6 +121,8 @@ export default function ProfilePage() {
               localStorage.removeItem("isAuthenticated")
               localStorage.removeItem("userEmail")
               localStorage.removeItem("userName")
+              localStorage.removeItem("token")
+              localStorage.removeItem("userId")
               window.location.href = "/auth/login"
             }}
             className="w-full btn-danger"

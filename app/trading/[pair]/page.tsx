@@ -6,7 +6,9 @@ import Link from "next/link"
 import TradeModal from "@/components/trade-modal"
 import { useParams } from "next/navigation"
 
-interface PriceData {
+import { fetchCryptoPrice, PriceData } from "@/lib/price-service"
+
+interface DisplayPriceData {
   symbol: string
   price: number
   change: number
@@ -15,41 +17,6 @@ interface PriceData {
   open: number
   close: number
   volume: number
-}
-
-async function fetchPriceData(pairId: string): Promise<PriceData | null> {
-  try {
-    const cryptoMap: Record<string, string> = {
-      btc: "bitcoin",
-      eth: "ethereum",
-      ltc: "litecoin",
-      dot: "polkadot",
-    }
-
-    const cryptoId = cryptoMap[pairId] || pairId
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${cryptoId}?localization=false&market_data=true&community_data=false&developer_data=false`,
-    )
-
-    if (!response.ok) throw new Error("Failed to fetch data")
-
-    const data = await response.json()
-    const marketData = data.market_data
-
-    return {
-      symbol: `${data.symbol.toUpperCase()}/USDT`,
-      price: marketData.current_price.usd,
-      change: marketData.price_change_percentage_24h || 0,
-      high: marketData.high_24h.usd,
-      low: marketData.low_24h.usd,
-      open: marketData.current_price.usd * (1 - marketData.price_change_percentage_24h / 100),
-      close: marketData.current_price.usd,
-      volume: marketData.total_volume.usd || 0,
-    }
-  } catch (error) {
-    console.log("[v0] Failed to fetch crypto data:", error)
-    return null
-  }
 }
 
 function TradingViewChart({ pair }: { pair: string }) {
@@ -113,17 +80,29 @@ export default function TradingPage() {
   const [selectedPrediction, setSelectedPrediction] = useState<"up" | "down" | null>(null)
   const [inProgressTab, setInProgressTab] = useState(true)
   const [showTradeModal, setShowTradeModal] = useState(false)
-  const [priceData, setPriceData] = useState<PriceData | null>(null)
+  const [priceData, setPriceData] = useState<DisplayPriceData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const data = await fetchPriceData(pair)
-      if (data) {
-        setPriceData(data)
+      try {
+        const data = await fetchCryptoPrice(pair)
+        setPriceData({
+          symbol: `${pair.toUpperCase()}/USDT`,
+          price: data.price,
+          change: data.change,
+          high: data.high || 0,
+          low: data.low || 0,
+          open: data.open || 0,
+          close: data.close || data.price,
+          volume: data.volume || 0,
+        })
+      } catch (error) {
+        console.error("Failed to fetch price data:", error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchData()
@@ -134,12 +113,12 @@ export default function TradingPage() {
 
   const displayData = priceData || {
     symbol: pair?.toUpperCase() || "UNKNOWN",
-    price: 102863.78,
-    change: 1.1,
-    high: 102989.26,
-    low: 99260.86,
-    open: 101798.79,
-    close: 102863.78,
+    price: pair === "btc" ? 98000 : pair === "eth" ? 3500 : pair === "ltc" ? 140 : 12,
+    change: 0,
+    high: 0,
+    low: 0,
+    open: 0,
+    close: 0,
     volume: 0,
   }
 
@@ -167,9 +146,9 @@ export default function TradingPage() {
               <h1 className="text-5xl font-bold mb-4">{displayData.symbol}</h1>
               <div className="flex items-center gap-4">
                 <span className="text-4xl font-bold text-primary">
-                  ${displayData.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  ${loading ? "Loading..." : displayData.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                 </span>
-                <span
+                {!loading && <span
                   className={`px-4 py-2 rounded-lg font-semibold text-sm ${
                     displayData.change >= 0
                       ? "bg-accent/20 text-accent border border-accent/50"
@@ -177,7 +156,7 @@ export default function TradingPage() {
                   }`}
                 >
                   {displayData.change >= 0 ? "↑" : "↓"} {Math.abs(displayData.change).toFixed(2)}%
-                </span>
+                </span>}
               </div>
             </div>
 
@@ -272,15 +251,12 @@ export default function TradingPage() {
       {showTradeModal && selectedPrediction && (
         <TradeModal
           pair={{
-            id: pair,
             symbol: displayData.symbol,
             price: displayData.price,
-            change: displayData.change,
-            icon: "",
-            color: "",
           }}
           isOpen={showTradeModal}
           onClose={() => setShowTradeModal(false)}
+          direction={selectedPrediction}
         />
       )}
     </div>

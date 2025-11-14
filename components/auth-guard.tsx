@@ -12,13 +12,54 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const authenticated = localStorage.getItem("isAuthenticated") === "true"
-    setIsAuthenticated(authenticated)
-    setIsLoading(false)
+    const verifyAuth = async () => {
+      const token = localStorage.getItem("token")
+      const storedAuth = localStorage.getItem("isAuthenticated") === "true"
 
-    if (!authenticated && pathname !== "/auth/login") {
-      router.push("/auth/login")
+      if (!token || !storedAuth) {
+        setIsAuthenticated(false)
+        setIsLoading(false)
+        if (pathname !== "/auth/login" && pathname !== "/auth/register") {
+          router.push("/auth/login")
+        }
+        return
+      }
+
+      // Verify token with backend
+      try {
+        const response = await fetch("http://localhost:3001/auth/verify", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.ok) {
+          const userData = await response.json()
+          setIsAuthenticated(true)
+          // Store user role for admin access
+          localStorage.setItem("userRole", userData.role)
+        } else {
+          // Token invalid, clear storage
+          localStorage.removeItem("isAuthenticated")
+          localStorage.removeItem("userEmail")
+          localStorage.removeItem("userName")
+          localStorage.removeItem("token")
+          localStorage.removeItem("userId")
+          setIsAuthenticated(false)
+          if (pathname !== "/auth/login" && pathname !== "/auth/register") {
+            router.push("/auth/login")
+          }
+        }
+      } catch (error) {
+        console.error("Auth verification failed:", error)
+        // On network error, allow access if token exists (offline mode)
+        setIsAuthenticated(true)
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    verifyAuth()
   }, [pathname, router])
 
   if (isLoading) {
@@ -32,7 +73,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!isAuthenticated && pathname !== "/auth/login") {
+  if (!isAuthenticated && pathname !== "/auth/login" && pathname !== "/auth/register") {
     return null
   }
 

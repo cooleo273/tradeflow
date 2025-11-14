@@ -1,45 +1,38 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
     try {
-      const response = await fetch("http://localhost:3001/auth/login", {
+      const response = await fetch("http://localhost:3001/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email, password }),
       })
 
       if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem("isAuthenticated", "true")
-        localStorage.setItem("userEmail", email)
-        localStorage.setItem("userName", email.split("@")[0])
-        localStorage.setItem("token", data.accessToken) // Backend returns accessToken
-        // Note: user ID is in JWT token payload (sub field), no need to store separately
-        router.push("/")
+        // Registration successful - navigate to login
+        router.push("/auth/login")
       } else {
-        const errorData = await response.json()
-        setError(errorData.message || "Login failed. Please try again.")
+        const err = await response.json()
+        setError(err.message || "Registration failed")
       }
     } catch (err) {
-      setError("Login failed. Please try again.")
+      setError("Registration failed. Please check your connection.")
     } finally {
       setLoading(false)
     }
@@ -55,10 +48,34 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-center mb-2">TradeFlow</h1>
-          <p className="text-center text-muted-foreground mb-8">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-center mb-2">Create an account</h1>
+          <p className="text-center text-muted-foreground mb-8">Sign up to TradeFlow</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">First name</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                placeholder="John"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Last name</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                placeholder="Doe"
+                required
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-2">Email</label>
               <input
@@ -88,12 +105,12 @@ export default function LoginPage() {
             )}
 
             <button type="submit" disabled={loading} className="w-full btn-primary">
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border text-center text-sm text-muted-foreground">
-            Don't have an account? <a href="/auth/register" className="text-primary hover:text-primary/80">Sign up</a>
+            Already have an account? <a href="/auth/login" className="text-primary">Sign in</a>
           </div>
         </div>
       </div>
