@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { API_BASE_URL } from "@/lib/config"
 
 export default function ProfilePage() {
   const [balance, setBalance] = useState(0)
@@ -15,7 +16,7 @@ export default function ProfilePage() {
       try {
         const token = localStorage.getItem("token")
         const userId = localStorage.getItem("userId")
-        const response = await fetch(`http://localhost:3001/transactions?userId=${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/transactions?userId=${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { API_BASE_URL } from "@/lib/config"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -27,7 +28,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
       // Verify token with backend
       try {
-        const response = await fetch("http://localhost:3001/auth/verify", {
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

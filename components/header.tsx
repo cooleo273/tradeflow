@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { API_BASE_URL } from "@/lib/config"
 
 export default function Header() {
   const [userInitials, setUserInitials] = useState("")
@@ -51,7 +52,7 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token")
-      await fetch("http://localhost:3001/auth/logout", {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { API_BASE_URL } from "@/lib/config"
 
 export default function DepositPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
@@ -121,7 +122,7 @@ export default function DepositPage() {
                 formData.append("proof", file)
                 try {
                   const token = localStorage.getItem("token")
-                  const response = await fetch("http://localhost:3001/payments/create", {
+                  const response = await fetch(`${API_BASE_URL}/payments/create`, {
                     method: "POST",
                     headers: {
                       Authorization: `Bearer ${token}`,

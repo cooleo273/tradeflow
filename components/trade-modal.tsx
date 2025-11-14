@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react"
 import { useState } from "react"
+import { API_BASE_URL } from "@/lib/config"
 
 interface TradeModalProps {
   pair: { symbol: string; price: number }
@@ -22,7 +23,7 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
     try {
       const token = localStorage.getItem("token")
       const userId = localStorage.getItem("userId")
-      const response = await fetch("http://localhost:3001/orders", {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

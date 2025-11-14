@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { API_BASE_URL } from "@/lib/config"
 
 export default function WithdrawPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
@@ -22,7 +23,7 @@ export default function WithdrawPage() {
     try {
       const token = localStorage.getItem("token")
       const userId = localStorage.getItem("userId")
-      const response = await fetch("http://localhost:3001/transactions", {
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

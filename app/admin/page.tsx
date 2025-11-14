@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { API_BASE_URL } from "@/lib/config"
 
 interface User {
   id: number
@@ -88,10 +89,10 @@ export default function AdminDashboard() {
 
       // Fetch stats
       const [usersRes, paymentsRes, transactionsRes, ordersRes] = await Promise.all([
-        fetch("http://localhost:3001/users", { headers }),
-        fetch("http://localhost:3001/payments?status=PENDING", { headers }),
-        fetch("http://localhost:3001/transactions", { headers }),
-        fetch("http://localhost:3001/orders", { headers })
+        fetch(`${API_BASE_URL}/users`, { headers }),
+        fetch(`${API_BASE_URL}/payments?status=PENDING`, { headers }),
+        fetch(`${API_BASE_URL}/transactions`, { headers }),
+        fetch(`${API_BASE_URL}/orders`, { headers })
       ])
 
       if (usersRes.ok) {
@@ -131,7 +132,7 @@ export default function AdminDashboard() {
   const handlePaymentAction = async (paymentId: number, action: 'approve' | 'reject', comment?: string) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:3001/payments/${paymentId}/${action}`, {
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +156,7 @@ export default function AdminDashboard() {
   const handleUserStatusChange = async (userId: number, isActive: boolean) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`http://localhost:3001/users/${userId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -393,7 +394,7 @@ export default function AdminDashboard() {
                     {payment.proofUrl && (
                       <div className="mb-3">
                         <img
-                          src={`http://localhost:3001${payment.proofUrl}`}
+                          src={`${API_BASE_URL}${payment.proofUrl}`}
                           alt="Payment proof"
                           className="max-w-xs rounded border"
                         />
