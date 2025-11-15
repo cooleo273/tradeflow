@@ -36,9 +36,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
         if (response.ok) {
           const userData = await response.json()
+          console.log("/auth/verify response", userData)
           setIsAuthenticated(true)
           // Store user role for admin access
-          localStorage.setItem("userRole", userData.role)
+          const role = userData.role || userData.user?.role
+          if (role) {
+            localStorage.setItem("userRole", role)
+          }
         } else {
           // Token invalid, clear storage
           localStorage.removeItem("isAuthenticated")
