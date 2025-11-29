@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import AnimatedPrice from "@/components/animated-price"
 import { fetchMultiplePrices, PriceData } from "@/lib/price-service"
 
 interface TradingPair {
@@ -146,11 +147,13 @@ const initialPairs: TradingPair[] = [
 export default function TradingPairs() {
   const [pairs, setPairs] = useState<TradingPair[]>([])
   const [loading, setLoading] = useState(true)
+  const initialLoadedRef = useRef(false)
 
   useEffect(() => {
     const fetchAllPrices = async () => {
       try {
-        setLoading(true)
+        // Only show skeleton the first time. On subsequent polls we just update prices
+        if (!initialLoadedRef.current) setLoading(true)
         const priceData = await fetchMultiplePrices(initialPairs.map(p => p.id))
         const updatedPairs = initialPairs.map(pair => ({
           ...pair,
@@ -158,6 +161,7 @@ export default function TradingPairs() {
           change: priceData[pair.id].change,
         }))
         setPairs(updatedPairs)
+        initialLoadedRef.current = true
       } catch (error) {
         console.error("Failed to fetch prices:", error)
         // Keep existing prices if fetch fails
@@ -218,8 +222,8 @@ export default function TradingPairs() {
           </div>
 
           <div className="flex items-end justify-between w-full">
-            <div>
-              <p className="text-2xl font-bold text-foreground">${pair.price.toLocaleString()}</p>
+              <div>
+              <AnimatedPrice value={pair.price} decimals={pair.price < 1 ? 4 : 2} />
               <p className="text-sm text-muted-foreground mt-1">Current Price</p>
             </div>
             <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${

@@ -49,6 +49,61 @@
   --popover-foreground: #f8fafc;
 }
 
+/* Theme palettes */
+.ocean {
+  --primary: #0ea5e9; /* cyan */
+  --primary-foreground: #0f172a;
+  --background: #071022;
+  --foreground: #e6f6ff;
+  --card: #071f2a;
+  --accent: #06b6d4;
+  --accent-foreground: #02121a;
+  --muted: #9aa7b1;
+  --border: #12303e;
+  --chart-1: #0ee6c7;
+  --chart-2: #00d9ff;
+  --chart-3: #8b5cf6;
+}
+
+.neon {
+  --primary: #00ff85;
+  --primary-foreground: #061018;
+  --background: #05060A;
+  --foreground: #e6fff8;
+  --card: #061018;
+  --accent: #007CF0;
+  --muted: #7c98a1;
+  --border: #0b0f12;
+  --chart-1: #00ff85;
+  --chart-2: #00aaff;
+}
+
+.gold {
+  --primary: #0b61ff; /* deep navy primary */
+  --primary-foreground: #ffffff;
+  --background: #081029;
+  --foreground: #fffaf5;
+  --card: #0f1724;
+  --accent: #ffd166; /* gold accent */
+  --muted: #c9b89a;
+  --border: #13203C;
+  --chart-1: #ffd166;
+  --chart-2: #0b61ff;
+}
+
+.midnight {
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --background: #0b1020;
+  --foreground: #eaf3ff;
+  --card: #0f1724;
+  --accent: #ff7a00;
+  --muted: #9aa2b3;
+  --border: #1f2a44;
+  --chart-1: #7c3aed;
+  --chart-2: #ff7a00;
+}
+
 @theme inline {
   /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
   --color-background: var(--background);
@@ -109,23 +164,23 @@
 
 /* Modern button styles */
 .btn-primary {
-  @apply bg-primary text-primary-foreground font-semibold py-3 px-6 rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20;
+  @apply bg-primary text-primary-foreground font-semibold py-3 px-6 rounded-2xl hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20;
 }
 
 .btn-secondary {
-  @apply bg-secondary text-secondary-foreground font-semibold py-2 px-4 rounded-lg hover:bg-secondary/80 transition-colors border border-border;
+  @apply bg-secondary text-secondary-foreground font-semibold py-2 px-4 rounded-2xl hover:bg-secondary/80 transition-colors border border-border;
 }
 
 .btn-accent {
-  @apply bg-accent/10 text-accent font-semibold py-2 px-4 rounded-lg hover:bg-accent/20 transition-colors border border-accent/30;
+  @apply bg-accent/10 text-accent font-semibold py-2 px-4 rounded-2xl hover:bg-accent/20 transition-colors border border-accent/30;
 }
 
 .btn-success {
-  @apply bg-green-500/10 text-green-400 font-semibold py-3 px-6 rounded-lg hover:bg-green-500/20 transition-colors border border-green-500/30;
+  @apply bg-green-500/10 text-green-400 font-semibold py-3 px-6 rounded-2xl hover:bg-green-500/20 transition-colors border border-green-500/30;
 }
 
 .btn-danger {
-  @apply bg-red-500/10 text-red-400 font-semibold py-3 px-6 rounded-lg hover:bg-red-500/20 transition-colors border border-red-500/30;
+  @apply bg-red-500/10 text-red-400 font-semibold py-3 px-6 rounded-2xl hover:bg-red-500/20 transition-colors border border-red-500/30;
 }
 
 /* Enhanced card premium styling with better shadows and gradients */
@@ -134,7 +189,7 @@
 }
 
 .card-glass {
-  @apply bg-secondary/30 backdrop-blur-sm border border-border/40 rounded-lg p-4 hover:bg-secondary/50 transition-colors;
+  @apply bg-secondary/30 backdrop-blur-sm border border-border/40 rounded-2xl p-4 hover:bg-secondary/50 transition-colors;
 }
 
 /* Badge and status styles */
@@ -147,11 +202,11 @@
 }
 
 .banner-info {
-  @apply bg-blue-500/10 border border-blue-500/30 text-blue-300 p-4 rounded-lg flex items-center gap-3;
+  @apply bg-blue-500/10 border border-blue-500/30 text-blue-300 p-4 rounded-2xl flex items-center gap-3;
 }
 
 .banner-warning {
-  @apply bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 p-4 rounded-lg flex items-center gap-3;
+  @apply bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 p-4 rounded-2xl flex items-center gap-3;
 }
 
 /* Crypto icon styles */
@@ -179,6 +234,16 @@
 .gradient-hero {
   @apply bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900;
 }
+
+/* Small mobile ornament blurs should be subtle - add a lower intensity for smaller screens */
+/* Hero ornaments removed */
+
+@media (min-width: 1024px) {
+  /* On large screens, the decorative ornaments are elsewhere — hide text background to avoid overlap */
+  /* no hero text background ornament */
+}
+
+/* Hero ornaments removed */
 
 /* Smooth transitions */
 .transition-smooth {

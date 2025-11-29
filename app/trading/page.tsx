@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import AnimatedPrice from "@/components/animated-price"
 import Header from "@/components/header"
 import TradeModal from "@/components/trade-modal"
 import { BarChart3, TrendingUp, TrendingDown } from "lucide-react"
@@ -14,13 +15,14 @@ export default function TradingPage() {
   const [price, setPrice] = useState(98000) // Updated fallback price
   const [previousPrice, setPreviousPrice] = useState(0)
   const [loading, setLoading] = useState(true)
+  const initialLoadedRef = useRef(false)
 
   const pair = { symbol: "BTC/USDT", price }
 
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        setLoading(true)
+        if (!initialLoadedRef.current) setLoading(true)
         const data = await fetchCryptoPrice("btc")
         setPrice(prev => {
           setPreviousPrice(prev)
@@ -30,6 +32,7 @@ export default function TradingPage() {
         console.error("Failed to fetch BTC price:", error)
       } finally {
         setLoading(false)
+        initialLoadedRef.current = true
       }
     }
 
@@ -57,7 +60,7 @@ export default function TradingPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">BTC/USDT</h1>
             <div className="flex items-center gap-4">
-              <span className="text-2xl font-bold">{loading ? "Loading..." : price.toLocaleString()}</span>
+              <span className="text-2xl font-bold">{loading ? "Loading..." : <AnimatedPrice value={price} decimals={2} />}</span>
               {!loading && <span className={priceChange >= 0 ? "text-green-400" : "text-red-400"}>
                 {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)}%
               </span>}
@@ -80,7 +83,7 @@ export default function TradingPage() {
         </div>
 
         {/* Chart Area */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-8 h-96 flex items-center justify-center">
+        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 mb-8 h-96 flex items-center justify-center">
           <div className="text-center text-muted-foreground">
             <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
             <p>Candlestick chart visualization</p>
@@ -91,7 +94,7 @@ export default function TradingPage() {
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => handlePrediction("up")}
-            className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-lg transition-all ${
+            className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-2xl transition-all ${
               selectedPrediction === "up"
                 ? "bg-green-500 text-white scale-105"
                 : "bg-green-500/30 text-green-400 hover:bg-green-500/50"
@@ -102,7 +105,7 @@ export default function TradingPage() {
           </button>
           <button
             onClick={() => handlePrediction("down")}
-            className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-lg transition-all ${
+            className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-2xl transition-all ${
               selectedPrediction === "down"
                 ? "bg-red-500 text-white scale-105"
                 : "bg-red-500/30 text-red-400 hover:bg-red-500/50"

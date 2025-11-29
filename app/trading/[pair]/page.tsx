@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import AnimatedPrice from "@/components/animated-price"
 import Header from "@/components/header"
 import Link from "next/link"
 import TradeModal from "@/components/trade-modal"
@@ -82,10 +83,11 @@ export default function TradingPage() {
   const [showTradeModal, setShowTradeModal] = useState(false)
   const [priceData, setPriceData] = useState<DisplayPriceData | null>(null)
   const [loading, setLoading] = useState(true)
+  const initialLoadedRef = useRef(false)
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      if (!initialLoadedRef.current) setLoading(true)
       try {
         const data = await fetchCryptoPrice(pair)
         setPriceData({
@@ -102,6 +104,7 @@ export default function TradingPage() {
         console.error("Failed to fetch price data:", error)
       } finally {
         setLoading(false)
+        initialLoadedRef.current = true
       }
     }
 
@@ -146,10 +149,14 @@ export default function TradingPage() {
               <h1 className="text-5xl font-bold mb-4">{displayData.symbol}</h1>
               <div className="flex items-center gap-4">
                 <span className="text-4xl font-bold text-primary">
-                  ${loading ? "Loading..." : displayData.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  {loading ? (
+                    "Loading..."
+                  ) : (
+                    <AnimatedPrice value={displayData.price} decimals={2} />
+                  )}
                 </span>
                 {!loading && <span
-                  className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+                  className={`px-4 py-2 rounded-2xl font-semibold text-sm ${
                     displayData.change >= 0
                       ? "bg-accent/20 text-accent border border-accent/50"
                       : "bg-destructive/20 text-destructive border border-destructive/50"
@@ -164,19 +171,19 @@ export default function TradingPage() {
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest">24h Low</p>
                 <p className="text-2xl font-bold text-primary">
-                  ${displayData.low.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  <AnimatedPrice value={displayData.low} decimals={0} />
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest">24h High</p>
                 <p className="text-2xl font-bold text-primary">
-                  ${displayData.high.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  <AnimatedPrice value={displayData.high} decimals={0} />
                 </p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-2 uppercase tracking-widest">Open</p>
                 <p className="text-2xl font-bold">
-                  ${displayData.open.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  <AnimatedPrice value={displayData.open} decimals={0} />
                 </p>
               </div>
             </div>

@@ -57,17 +57,17 @@ export default function AdminDashboard() {
       if (usersRes.ok) {
         const usersData: User[] = await usersRes.json()
         setUsers(usersData)
-        setStats((prev) => ({ ...prev, totalUsers: usersData.length, activeUsers: usersData.filter((u) => u.isActive).length }))
+        setStats(prev => ({ ...prev, totalUsers: usersData.length, activeUsers: usersData.filter(u => u.isActive).length }))
       }
       if (paymentsRes.ok) {
         const paymentsData: Payment[] = await paymentsRes.json()
         setPayments(paymentsData)
-        setStats((prev) => ({ ...prev, pendingPayments: paymentsData.length }))
+        setStats(prev => ({ ...prev, pendingPayments: paymentsData.length }))
       }
       if (transactionsRes.ok) {
         const txData: Transaction[] = await transactionsRes.json()
         setTransactions(txData)
-        setStats((prev) => ({ ...prev, recentTransactions: txData.length }))
+        setStats(prev => ({ ...prev, recentTransactions: txData.length }))
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data", error)
@@ -82,20 +82,6 @@ export default function AdminDashboard() {
     router.push("/auth/login")
   }
 
-  const handlePaymentAction = async (paymentId: number, action: "approve" | "reject") => {
-    try {
-      const token = localStorage.getItem("token")
-      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/${action}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({}),
-      })
-      response.ok ? fetchDashboardData() : alert(`Failed to ${action} payment`)
-    } catch (error) {
-      console.error(`Failed to ${action} payment`, error)
-    }
-  }
-
   const handleUserStatusChange = async (userId: number, isActive: boolean) => {
     try {
       const token = localStorage.getItem("token")
@@ -107,6 +93,21 @@ export default function AdminDashboard() {
       response.ok ? fetchDashboardData() : alert("Failed to update user status")
     } catch (error) {
       console.error("Failed to update user status", error)
+    }
+  }
+
+  const handlePaymentAction = async (paymentId: number, action: "approve" | "reject", amount?: number) => {
+    try {
+      const token = localStorage.getItem("token")
+      const body = action === "approve" && amount !== undefined ? { amount } : {}
+      const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      })
+      response.ok ? fetchDashboardData() : alert(`Failed to ${action} payment`)
+    } catch (error) {
+      console.error(`Failed to ${action} payment`, error)
     }
   }
 
@@ -142,7 +143,7 @@ export default function AdminDashboard() {
         collapsed={sidebarCollapsed}
         onSelect={setActiveTab}
         onExit={() => router.push("/")}
-        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
         onLogout={handleLogout}
       />
       <div className="flex-1 flex flex-col">
@@ -153,7 +154,7 @@ export default function AdminDashboard() {
               <p className="text-sm text-muted-foreground">Control center</p>
               <h1 className="text-2xl font-bold">Dashboard</h1>
             </div>
-            <button onClick={fetchDashboardData} className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary">
+            <button onClick={fetchDashboardData} className="rounded-2xl border border-border px-4 py-2 text-sm hover:bg-secondary">
               Refresh Data
             </button>
           </div>

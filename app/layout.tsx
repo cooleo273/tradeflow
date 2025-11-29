@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import Script from "next/script"
 import "./globals.css"
 import { AuthGuard } from "@/components/auth-guard"
+import { BalanceProvider } from "@/lib/context/BalanceContext"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -40,7 +42,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <AuthGuard>{children}</AuthGuard>
+        <ThemeProvider attribute="class" defaultTheme="ocean">
+          <AuthGuard>
+            <BalanceProvider>{children}</BalanceProvider>
+          </AuthGuard>
+        </ThemeProvider>
         <Analytics />
         <Script id="tawk-chat-widget" strategy="afterInteractive">
           {`

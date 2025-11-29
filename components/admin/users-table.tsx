@@ -25,7 +25,7 @@ export function UsersTable({ users, searchTerm, onSearch, onToggleStatus }: User
           placeholder="Search users by email or name..."
           value={searchTerm}
           onChange={(e) => onSearch(e.target.value)}
-          className="flex-1 bg-input border border-border rounded-lg px-4 py-2"
+          className="flex-1 bg-input border border-border rounded-2xl px-4 py-2"
         />
       </div>
 
@@ -75,7 +75,7 @@ export function UsersTable({ users, searchTerm, onSearch, onToggleStatus }: User
                   <td className="py-3 px-4">
                     <button
                       onClick={() => onToggleStatus(user.id, !user.isActive)}
-                      className={`px-3 py-1 rounded text-xs font-medium ${
+                      className={`px-3 py-1 rounded-2xl text-xs font-medium ${
                         user.isActive
                           ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
                           : "bg-green-500/20 text-green-400 hover:bg-green-500/30"

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { API_BASE_URL } from "@/lib/config"
+import { getUserId } from "@/lib/auth"
 
 export default function WithdrawPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
@@ -22,7 +23,7 @@ export default function WithdrawPage() {
     setError("")
     try {
       const token = localStorage.getItem("token")
-      const userId = localStorage.getItem("userId")
+      const userId = getUserId()
       const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: "POST",
         headers: {
@@ -81,11 +82,10 @@ export default function WithdrawPage() {
               <button
                 key={option}
                 onClick={() => setSelectedCrypto(option)}
-                className={`p-4 rounded-lg border-2 font-medium transition-all ${
-                  selectedCrypto === option
+                className={`p-4 rounded-2xl border-2 font-medium transition-all ${selectedCrypto === option
                     ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/50"
                     : "bg-secondary border-border hover:border-primary"
-                }`}
+                  }`}
               >
                 {option}
               </button>
@@ -94,7 +94,7 @@ export default function WithdrawPage() {
         </div>
 
         {/* Withdrawal Amount */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-6">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <label className="block text-sm font-medium mb-3">Withdrawal Amount</label>
           <div className="flex gap-3">
             <input
@@ -102,28 +102,28 @@ export default function WithdrawPage() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount"
-              className="flex-1 bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+              className="flex-1 bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
             />
-            <span className="flex items-center px-4 py-3 bg-secondary border border-border rounded-lg font-medium">
+            <span className="flex items-center px-4 py-3 bg-secondary border border-border rounded-2xl font-medium">
               {selectedCrypto}
             </span>
           </div>
         </div>
 
         {/* Withdrawal Address */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-8">
           <label className="block text-sm font-medium mb-3">Withdrawal Address</label>
           <input
             type="text"
             value={withdrawAddress}
             onChange={(e) => setWithdrawAddress(e.target.value)}
             placeholder="Enter your wallet address"
-            className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+            className="w-full bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
           />
         </div>
 
         {/* Fee Info */}
-        <div className="bg-secondary border border-border rounded-lg p-4 mb-8 grid grid-cols-2 gap-4">
+        <div className="bg-secondary border border-border rounded-2xl p-4 mb-8 grid grid-cols-2 gap-4">
           <div>
             <p className="text-muted-foreground text-sm">Network Fee</p>
             <p className="text-lg font-semibold">0.0005 {selectedCrypto}</p>
@@ -145,7 +145,7 @@ export default function WithdrawPage() {
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-lg text-sm mb-4">{error}</div>
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-2xl text-sm mb-4">{error}</div>
         )}
 
         {/* CTA Button */}

@@ -1,4 +1,6 @@
 import { NavItem } from "@/types/admin"
+import Select from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 
 interface MobileNavProps {
   navItems: NavItem[]
@@ -15,24 +17,17 @@ export function MobileNav({ navItems, activeTab, onSelect, onLogout }: MobileNav
           <p className="text-xs uppercase text-muted-foreground">Trade Flow</p>
           <p className="text-lg font-semibold">Admin Console</p>
         </div>
-        <select
-          value={activeTab}
-          onChange={(e) => onSelect(e.target.value)}
-          className="bg-background border border-border rounded-lg px-3 py-2 text-sm"
-        >
+        <Select value={activeTab} onChange={(e) => onSelect(e.target.value)}>
           {navItems.map((item) => (
             <option key={item.id} value={item.id}>
               {item.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
-      <button
-        onClick={onLogout}
-        className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-destructive/10 hover:text-destructive"
-      >
+      <Button onClick={onLogout} variant="destructive" className="w-full">
         Logout
-      </button>
+      </Button>
     </div>
   )
 }

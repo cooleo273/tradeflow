@@ -15,7 +15,7 @@ export default function WalletConnect({ connected, address, onConnect, onDisconn
   if (connected) {
     return (
       <div className="flex items-center gap-2">
-        <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-2xl bg-secondary">
           <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
           <span className="text-sm text-muted-foreground font-mono">
             {address.slice(0, 6)}...{address.slice(-4)}

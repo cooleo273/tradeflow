@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { CreditCard, WalletIcon, TrendingUp, ArrowDownUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import AnimatedPrice from "@/components/animated-price"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
@@ -32,7 +33,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
   const totalBalance = BALANCES.reduce((acc, b) => acc + Number.parseFloat(b.value.slice(1)), 0)
 
   const handlePlaceOrder = () => {
-    console.log("[v0] Order placed:", { market: selectedMarket, type: orderType, quantity, price })
+    if (process.env.NODE_ENV === "development") console.log("[v0] Order placed:", { market: selectedMarket, type: orderType, quantity, price })
   }
 
   return (
@@ -83,7 +84,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
             {activeTab === "balances" && (
               <div className="space-y-3">
                 {BALANCES.map((balance) => (
-                  <div key={balance.symbol} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                  <div key={balance.symbol} className="flex items-center justify-between p-3 bg-secondary rounded-2xl">
                     <div>
                       <div className="font-semibold">{balance.symbol}</div>
                       <div className="text-sm text-muted-foreground">
@@ -122,7 +123,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
                       setSelectedMarket(market.symbol)
                       setActiveTab("trade")
                     }}
-                    className="p-4 bg-secondary rounded-lg border border-border hover:border-primary/50 transition-all cursor-pointer"
+                    className="p-4 bg-secondary rounded-2xl border border-border hover:border-primary/50 transition-all cursor-pointer"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="font-semibold">{market.symbol}</div>
@@ -133,7 +134,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
                         {market.change24h}%
                       </div>
                     </div>
-                    <div className="text-lg font-bold">${market.price.toFixed(2)}</div>
+                      <div className="text-lg font-bold"><AnimatedPrice value={market.price} decimals={2} /></div>
                     <div className="text-xs text-muted-foreground mt-2">
                       H: ${market.high.toFixed(2)} L: ${market.low.toFixed(2)}
                     </div>
@@ -150,7 +151,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
                   <select
                     value={selectedMarket}
                     onChange={(e) => setSelectedMarket(e.target.value)}
-                    className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-secondary border border-border rounded-2xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     {MARKET_TRADES.map((m) => (
                       <option key={m.symbol} value={m.symbol}>
@@ -167,7 +168,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
                       <button
                         key={type}
                         onClick={() => setOrderType(type)}
-                        className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                        className={`px-3 py-2 rounded-2xl font-medium transition-all ${
                           orderType === type
                             ? "bg-primary text-primary-foreground"
                             : "bg-secondary border border-border hover:border-primary"
@@ -221,7 +222,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
             <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
 
             <div className="space-y-3">
-              <div className="p-4 bg-secondary rounded-lg border border-border">
+              <div className="p-4 bg-secondary rounded-2xl border border-border">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center">
                     <CreditCard className="h-4 w-4 text-accent" />
@@ -234,7 +235,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
                 </Button>
               </div>
 
-              <div className="p-4 bg-secondary rounded-lg border border-border">
+              <div className="p-4 bg-secondary rounded-2xl border border-border">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="h-8 w-8 rounded-full bg-accent/20 flex items-center justify-center">
                     <TrendingUp className="h-4 w-4 text-accent" />
@@ -247,7 +248,7 @@ export default function CexInterface({ walletAddress }: CexInterfaceProps) {
                 </Button>
               </div>
 
-              <div className="p-4 bg-secondary rounded-lg border border-border">
+              <div className="p-4 bg-secondary rounded-2xl border border-border">
                 <div className="text-xs text-muted-foreground mb-2">Trading Limits</div>
                 <div className="space-y-2">
                   <div className="flex justify-between">

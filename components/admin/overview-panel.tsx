@@ -72,7 +72,7 @@ export function OverviewPanel({ statCards, transactions, alerts }: OverviewPanel
           </div>
           <div className="space-y-3">
             {alerts.map((alert) => (
-              <div key={alert.id} className="border border-border/60 rounded-lg p-4">
+              <div key={alert.id} className="border border-border/60 rounded-2xl p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{alert.title}</span>
                   <span

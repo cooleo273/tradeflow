@@ -29,24 +29,9 @@ export default function Home() {
               >
                 Cryptocurrencies
               </button>
-              <button
-                onClick={() => setActiveTab("futures")}
-                className={`pb-3 font-semibold text-lg transition-all relative ${
-                  activeTab === "futures"
-                    ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-1 after:bg-gradient-to-r after:from-primary after:to-accent"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Binary Options
-              </button>
             </div>
 
-            {activeTab === "cryptos" && <TradingPairs />}
-            {activeTab === "futures" && (
-              <div className="text-center py-16 text-muted-foreground">
-                <p className="text-lg">Binary options trading coming soon</p>
-              </div>
-            )}
+            <TradingPairs />
           </div>
         </main>
       </div>

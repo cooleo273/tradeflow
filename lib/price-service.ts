@@ -27,14 +27,14 @@ const cryptoMap: Record<string, string> = {
 
 export async function fetchCryptoPrice(pairId: string): Promise<PriceData> {
   try {
-    console.log(`Fetching price for ${pairId}`)
+    if (process.env.NODE_ENV === "development") console.log(`Fetching price for ${pairId}`)
 
     // Use our API route to fetch from CoinMarketCap server-side
     const response = await fetch(`/api/prices?pair=${pairId}`)
 
     if (response.ok) {
       const data = await response.json()
-      console.log(`API route success for ${pairId}: $${data.price}`)
+      if (process.env.NODE_ENV === "development") console.log(`API route success for ${pairId}: $${data.price}`)
       return data
     }
 
@@ -50,7 +50,7 @@ export async function fetchCryptoPrice(pairId: string): Promise<PriceData> {
       const change = cgData[cryptoId]?.usd_24h_change || 0
 
       if (price > 0) {
-        console.log(`CoinGecko fallback success for ${pairId}: $${price}`)
+        if (process.env.NODE_ENV === "development") console.log(`CoinGecko fallback success for ${pairId}: $${price}`)
         return {
           price,
           change,
@@ -82,7 +82,7 @@ export async function fetchCryptoPrice(pairId: string): Promise<PriceData> {
     }
 
     const fallbackPrice = fallbackPrices[cryptoId] || 100
-    console.log(`Using fallback price for ${pairId}: $${fallbackPrice}`)
+    if (process.env.NODE_ENV === "development") console.log(`Using fallback price for ${pairId}: $${fallbackPrice}`)
 
     return {
       price: fallbackPrice,
@@ -127,7 +127,7 @@ export async function fetchCryptoPrice(pairId: string): Promise<PriceData> {
 }
 
 export async function fetchMultiplePrices(pairIds: string[]): Promise<Record<string, PriceData>> {
-  console.log(`Fetching prices for: ${pairIds.join(', ')}`)
+  if (process.env.NODE_ENV === "development") console.log(`Fetching prices for: ${pairIds.join(', ')}`)
 
   try {
     // Try to fetch all prices via our API route
@@ -149,7 +149,7 @@ export async function fetchMultiplePrices(pairIds: string[]): Promise<Record<str
 
     // If we got some data, return it
     if (Object.keys(priceData).length > 0) {
-      console.log('API route batch success:', Object.keys(priceData))
+      if (process.env.NODE_ENV === "development") console.log('API route batch success:', Object.keys(priceData))
       return priceData
     }
   } catch (error) {
@@ -165,7 +165,7 @@ export async function fetchMultiplePrices(pairIds: string[]): Promise<Record<str
 
     if (response.ok) {
       const data = await response.json()
-      console.log('CoinGecko batch API success:', data)
+      if (process.env.NODE_ENV === "development") console.log('CoinGecko batch API success:', data)
 
       const priceData: Record<string, PriceData> = {}
       pairIds.forEach(pairId => {
@@ -226,6 +226,6 @@ export async function fetchMultiplePrices(pairIds: string[]): Promise<Record<str
     }
   })
 
-  console.log('Using fallback prices:', priceData)
+  if (process.env.NODE_ENV === "development") console.log('Using fallback prices:', priceData)
   return priceData
 }

@@ -3,12 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { API_BASE_URL } from "@/lib/config"
+import { getUserId } from "@/lib/auth"
 
 export default function DepositPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [amount, setAmount] = useState("")
   const cryptos = ["BTC", "ETH", "USDT"]
 
   // Static deposit addresses
@@ -58,11 +60,10 @@ export default function DepositPage() {
               <button
                 key={crypto}
                 onClick={() => setSelectedCrypto(crypto)}
-                className={`p-4 rounded-lg border-2 font-medium transition-all ${
-                  selectedCrypto === crypto
-                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/50"
-                    : "bg-secondary border-border hover:border-primary"
-                }`}
+                className={`p-4 rounded-2xl border-2 font-medium transition-all ${selectedCrypto === crypto
+                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/50"
+                  : "bg-secondary border-border hover:border-primary"
+                  }`}
               >
                 {crypto}
               </button>
@@ -71,28 +72,47 @@ export default function DepositPage() {
         </div>
 
         {/* Deposit Address */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-8">
           <label className="block text-sm font-medium mb-3">Deposit Address</label>
-          <div className="flex items-center gap-3 bg-input border border-border rounded-lg p-4">
+          <div className="flex items-center gap-3 bg-input border border-border rounded-2xl p-4">
             <code className="flex-1 text-sm font-mono text-muted-foreground break-all">{address}</code>
             <button
               onClick={() => navigator.clipboard.writeText(address)}
-              className="px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/80 transition-colors text-sm font-medium"
+              className="px-3 py-2 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/80 transition-colors text-sm font-medium"
             >
               Copy
             </button>
           </div>
         </div>
 
+        {/* Deposit Amount */}
+        <div className="bg-card border border-border rounded-2xl p-6 mb-8">
+          <label className="block text-sm font-medium mb-3">Deposit Amount</label>
+          <div className="flex gap-3">
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount"
+              min="0"
+              step="0.01"
+              className="flex-1 bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+            />
+            <span className="flex items-center px-4 py-3 bg-secondary border border-border rounded-2xl font-medium">
+              {selectedCrypto}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">Enter the exact amount you deposited</p>
+        </div>
+
         {/* Upload Proof */}
-        <div className="bg-card border border-border rounded-lg p-6 mb-8">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-8">
           <label className="block text-sm font-medium mb-4">Upload Deposit Proof (Screenshot)</label>
           <div
             onDragEnter={() => setIsDragging(true)}
             onDragLeave={() => setIsDragging(false)}
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
-              isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary"
-            }`}
+            className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary"
+              }`}
             onClick={() => document.getElementById("file-input")?.click()}
           >
             <div className="text-4xl mb-3">📁</div>
@@ -110,13 +130,23 @@ export default function DepositPage() {
           {file && (
             <button
               onClick={async () => {
+                if (!amount || parseFloat(amount) <= 0) {
+                  alert("Please enter a valid amount")
+                  return
+                }
                 if (!file) {
                   alert("Please select a file")
                   return
                 }
                 setUploading(true)
                 const formData = new FormData()
-                formData.append("userId", localStorage.getItem("userId")!)
+                const userId = getUserId()
+                if (!userId) {
+                  alert("Please log in again")
+                  return
+                }
+                formData.append("userId", userId)
+                formData.append("amount", amount)
                 formData.append("currency", selectedCrypto)
                 formData.append("address", address)
                 formData.append("proof", file)
@@ -132,6 +162,7 @@ export default function DepositPage() {
                   if (response.ok) {
                     alert("Deposit proof submitted successfully")
                     setFile(null)
+                    setAmount("")
                   } else {
                     alert("Failed to submit deposit proof")
                   }

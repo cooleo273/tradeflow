@@ -33,11 +33,11 @@ export default function DexInterface({ walletAddress }: DexInterfaceProps) {
 
   const handleSwap = async () => {
     setIsSwapping(true)
-    console.log("[v0] Swap initiated:", { from: fromToken, to: toToken, amount: fromAmount })
+    if (process.env.NODE_ENV === "development") console.log("[v0] Swap initiated:", { from: fromToken, to: toToken, amount: fromAmount })
     // Simulate swap
     setTimeout(() => {
       setIsSwapping(false)
-      console.log("[v0] Swap completed")
+      if (process.env.NODE_ENV === "development") console.log("[v0] Swap completed")
     }, 2000)
   }
 
@@ -66,10 +66,10 @@ export default function DexInterface({ walletAddress }: DexInterfaceProps) {
                 placeholder="0.00"
                 className="flex-1 bg-secondary border-border text-foreground"
               />
-              <select
+                <select
                 value={fromToken}
                 onChange={(e) => setFromToken(e.target.value)}
-                className="px-4 py-2 bg-secondary border border-border rounded-lg text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-4 py-2 bg-secondary border border-border rounded-2xl text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {TOKENS.map((t) => (
                   <option key={t.symbol} value={t.symbol}>
@@ -85,7 +85,7 @@ export default function DexInterface({ walletAddress }: DexInterfaceProps) {
           <div className="flex justify-center mb-4">
             <button
               onClick={switchTokens}
-              className="p-2 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors border border-border"
+                className="p-2 rounded-2xl bg-secondary hover:bg-secondary/80 transition-colors border border-border"
             >
               <ArrowUpDown className="h-4 w-4" />
             </button>
@@ -103,10 +103,10 @@ export default function DexInterface({ walletAddress }: DexInterfaceProps) {
                 className="flex-1 bg-secondary border-border text-foreground"
                 disabled
               />
-              <select
+                <select
                 value={toToken}
                 onChange={(e) => setToToken(e.target.value)}
-                className="px-4 py-2 bg-secondary border border-border rounded-lg text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="px-4 py-2 bg-secondary border border-border rounded-2xl text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {TOKENS.map((t) => (
                   <option key={t.symbol} value={t.symbol}>
@@ -119,7 +119,7 @@ export default function DexInterface({ walletAddress }: DexInterfaceProps) {
           </div>
 
           {/* Swap Details */}
-          <div className="space-y-2 mb-6 p-3 bg-secondary rounded-lg text-sm">
+          <div className="space-y-2 mb-6 p-3 bg-secondary rounded-2xl text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>Price Impact</span>
               <span>0.12%</span>
@@ -171,7 +171,7 @@ export default function DexInterface({ walletAddress }: DexInterfaceProps) {
             {POOLS.map((pool) => (
               <div
                 key={pool.pair}
-                className="p-3 bg-secondary rounded-lg border border-border hover:border-primary/50 transition-colors cursor-pointer"
+                  className="p-3 bg-secondary rounded-2xl border border-border hover:border-primary/50 transition-colors cursor-pointer"
               >
                 <div className="font-semibold text-sm mb-2">{pool.pair}</div>
                 <div className="text-xs text-muted-foreground space-y-1">

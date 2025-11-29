@@ -33,7 +33,17 @@ export default function LoginPage() {
         localStorage.setItem("userEmail", email)
         localStorage.setItem("userName", email.split("@")[0])
         localStorage.setItem("token", data.accessToken) // Backend returns accessToken
-        // Note: user ID is in JWT token payload (sub field), no need to store separately
+        
+        // Decode JWT token to extract userId from 'sub' field
+        try {
+          const tokenPayload = JSON.parse(atob(data.accessToken.split('.')[1]))
+          if (tokenPayload.sub) {
+            localStorage.setItem("userId", tokenPayload.sub)
+          }
+        } catch (err) {
+          console.error("Failed to decode token:", err)
+        }
+        
         router.push("/")
       } else {
         const errorData = await response.json()
@@ -66,7 +76,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                className="w-full bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                 placeholder="you@example.com"
                 required
               />
@@ -78,14 +88,14 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
+                className="w-full bg-input border border-border rounded-2xl px-4 py-3 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none transition-colors"
                 placeholder="••••••••"
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-lg text-sm">{error}</div>
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-2xl text-sm">{error}</div>
             )}
 
             <button type="submit" disabled={loading} className="w-full btn-primary">

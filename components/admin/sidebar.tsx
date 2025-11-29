@@ -1,4 +1,6 @@
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import IconButton from "@/components/ui/icon-button"
 import { NavItem } from "@/types/admin"
 
 interface AdminSidebarProps {
@@ -20,46 +22,40 @@ export function AdminSidebar({ navItems, activeTab, collapsed, onSelect, onExit,
         <div className={collapsed ? "sr-only" : "block"}>
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Trade Flow</p>
           <p className="text-lg font-semibold">Admin Console</p>
-          <button
-            onClick={onExit}
-            className="mt-4 w-full rounded-lg border border-border px-3 py-2 text-sm hover:bg-secondary"
-          >
+          <Button onClick={onExit} className="mt-4 w-full" variant="ghost">
             Exit Console
-          </button>
+          </Button>
         </div>
-        <button
+        <IconButton
           onClick={onToggleCollapse}
-          className="rounded-lg border border-border p-2 text-muted-foreground hover:text-foreground"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
+        </IconButton>
       </div>
       <nav className="flex-1 px-2 py-6 space-y-1">
         {navItems.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id
           return (
-            <button
+            <Button
               key={id}
               onClick={() => onSelect(id)}
-              className={`w-full flex items-center ${collapsed ? "justify-center" : ""} gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              className={`w-full flex items-center ${collapsed ? "justify-center" : ""} gap-3 text-sm font-medium ${
                 isActive ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
               }`}
+              variant={isActive ? "primary" : "ghost"}
             >
               <Icon className="h-4 w-4" />
               <span className={collapsed ? "hidden" : "block"}>{label}</span>
-            </button>
+            </Button>
           )
         })}
       </nav>
       <div className="px-3 py-4 border-t border-border">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-destructive/10 hover:text-destructive"
-        >
+        <Button onClick={onLogout} variant="destructive" className="w-full flex items-center justify-center gap-2">
           <LogOut className="h-4 w-4" />
           {!collapsed && <span>Logout</span>}
-        </button>
+        </Button>
       </div>
     </aside>
   )

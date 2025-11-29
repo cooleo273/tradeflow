@@ -3,6 +3,7 @@
 import { X } from "lucide-react"
 import { useState } from "react"
 import { API_BASE_URL } from "@/lib/config"
+import { getUserId } from "@/lib/auth"
 
 interface TradeModalProps {
   pair: { symbol: string; price: number }
@@ -22,7 +23,7 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
     setLoading(true)
     try {
       const token = localStorage.getItem("token")
-      const userId = localStorage.getItem("userId")
+      const userId = getUserId()
       const response = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: {
@@ -70,7 +71,7 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground"
+            className="p-1.5 hover:bg-secondary rounded-2xl transition-colors text-muted-foreground hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -81,11 +82,10 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
             <div
               key={option.time}
               onClick={() => setSelectedTime(option.time)}
-              className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${
-                selectedTime === option.time
-                  ? "bg-primary/10 border-primary"
-                  : "bg-secondary/50 border-border hover:border-primary/50"
-              }`}
+              className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${selectedTime === option.time
+                ? "bg-primary/10 border-primary"
+                : "bg-secondary/50 border-border hover:border-primary/50"
+                }`}
             >
               <div className="font-semibold text-foreground mb-2">{option.time}</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -109,9 +109,8 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
             className={`relative w-12 h-7 rounded-full transition-all ${isLeverage ? "bg-primary" : "bg-secondary"}`}
           >
             <div
-              className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                isLeverage ? "translate-x-6" : "translate-x-1"
-              }`}
+              className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${isLeverage ? "translate-x-6" : "translate-x-1"
+                }`}
             />
           </button>
         </div>
@@ -124,11 +123,11 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full px-4 py-3 bg-secondary border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
-          <div className="bg-secondary/50 border border-border/50 rounded-lg p-4 space-y-2 text-sm">
+          <div className="bg-secondary/50 border border-border/50 rounded-2xl p-4 space-y-2 text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>Available Amount</span>
               <span>$-148.08</span>

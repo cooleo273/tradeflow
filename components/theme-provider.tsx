@@ -7,5 +7,10 @@ import {
 } from 'next-themes'
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  // Use `class` so theme names apply as CSS classes: `.theme-ocean`, `.theme-neon`, etc.
+  return (
+    <NextThemesProvider attribute="class" defaultTheme="ocean" {...props}>
+      {children}
+    </NextThemesProvider>
+  )
 }
