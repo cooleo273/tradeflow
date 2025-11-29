@@ -5,6 +5,7 @@ import AnimatedPrice from "@/components/animated-price"
 import Header from "@/components/header"
 import TradeModal from "@/components/trade-modal"
 import { BarChart3, TrendingUp, TrendingDown } from "lucide-react"
+import OrdersList from "@/components/orders-list"
 import { fetchCryptoPrice } from "@/lib/price-service"
 
 export default function TradingPage() {
@@ -13,6 +14,9 @@ export default function TradingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [direction, setDirection] = useState<"up" | "down">("up")
   const [price, setPrice] = useState(98000) // Updated fallback price
+  const [high, setHigh] = useState<number | null>(null)
+  const [low, setLow] = useState<number | null>(null)
+  const [close, setClose] = useState<number | null>(null)
   const [previousPrice, setPreviousPrice] = useState(0)
   const [loading, setLoading] = useState(true)
   const initialLoadedRef = useRef(false)
@@ -28,6 +32,9 @@ export default function TradingPage() {
           setPreviousPrice(prev)
           return data.price
         })
+        setHigh(data.high ?? null)
+        setLow(data.low ?? null)
+        setClose(data.close ?? null)
       } catch (error) {
         console.error("Failed to fetch BTC price:", error)
       } finally {
@@ -69,15 +76,15 @@ export default function TradingPage() {
           <div className="text-sm text-muted-foreground space-y-1 mt-4 md:mt-0">
             <div>
               <span>Low</span>
-              <span className="ml-2 font-semibold text-green-400">99,260.86</span>
+              <span className="ml-2 font-semibold text-green-400">{low ? low.toLocaleString() : "—"}</span>
             </div>
             <div>
               <span>High</span>
-              <span className="ml-2 font-semibold text-green-400">102,989.26</span>
+              <span className="ml-2 font-semibold text-green-400">{high ? high.toLocaleString() : "—"}</span>
             </div>
             <div>
               <span>Close</span>
-              <span className="ml-2 font-semibold">0.00</span>
+              <span className="ml-2 font-semibold">{close ? close.toLocaleString() : "—"}</span>
             </div>
           </div>
         </div>
@@ -90,28 +97,28 @@ export default function TradingPage() {
           </div>
         </div>
 
-        {/* Prediction Buttons */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        {/* Prediction Buttons (smaller) */}
+        <div className="flex gap-3 mb-8">
           <button
             onClick={() => handlePrediction("up")}
-            className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-2xl transition-all ${
+            className={`flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold rounded-xl transition-all ${
               selectedPrediction === "up"
-                ? "bg-green-500 text-white scale-105"
+                ? "bg-green-500 text-white"
                 : "bg-green-500/30 text-green-400 hover:bg-green-500/50"
             }`}
           >
-            <TrendingUp className="w-6 h-6" />
+            <TrendingUp className="w-5 h-5" />
             Up
           </button>
           <button
             onClick={() => handlePrediction("down")}
-            className={`flex items-center justify-center gap-2 py-4 px-6 font-bold rounded-2xl transition-all ${
+            className={`flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold rounded-xl transition-all ${
               selectedPrediction === "down"
-                ? "bg-red-500 text-white scale-105"
+                ? "bg-red-500 text-white"
                 : "bg-red-500/30 text-red-400 hover:bg-red-500/50"
             }`}
           >
-            <TrendingDown className="w-6 h-6" />
+            <TrendingDown className="w-5 h-5" />
             Down
           </button>
         </div>
@@ -137,7 +144,9 @@ export default function TradingPage() {
             </button>
           </div>
 
-          <div className="text-center py-8 text-muted-foreground">No In Progress Orders</div>
+          <div className="py-4">
+            {inProgressTab ? <OrdersList /> : <OrdersList showCompleted />}
+          </div>
         </div>
       </main>
 

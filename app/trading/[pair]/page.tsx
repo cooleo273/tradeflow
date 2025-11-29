@@ -8,6 +8,7 @@ import TradeModal from "@/components/trade-modal"
 import { useParams } from "next/navigation"
 
 import { fetchCryptoPrice, PriceData } from "@/lib/price-service"
+import OrdersList from "@/components/orders-list"
 
 interface DisplayPriceData {
   symbol: string
@@ -203,23 +204,25 @@ export default function TradingPage() {
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => handlePrediction("up")}
-            className={`flex items-center justify-center gap-3 py-8 px-6 font-bold text-xl rounded-xl transition-all transform duration-200 ${
+            className={`flex items-center justify-center gap-3 py-3 px-4 font-semibold rounded-xl transition-all duration-200 ${
               selectedPrediction === "up"
-                ? "bg-accent text-background scale-105 shadow-xl shadow-accent/30"
-                : "bg-accent/10 text-accent hover:bg-accent/20 border border-accent/50 hover:border-accent hover:shadow-lg hover:shadow-accent/20"
+                ? "bg-accent text-background"
+                : "bg-accent/10 text-accent hover:bg-accent/20 border border-accent/50 hover:border-accent hover:shadow-sm"
             }`}
           >
-            ↑ UP
+            <span className="text-base">↑</span>
+            <span>Up</span>
           </button>
           <button
             onClick={() => handlePrediction("down")}
-            className={`flex items-center justify-center gap-3 py-8 px-6 font-bold text-xl rounded-xl transition-all transform duration-200 ${
+            className={`flex items-center justify-center gap-3 py-3 px-4 font-semibold rounded-xl transition-all duration-200 ${
               selectedPrediction === "down"
-                ? "bg-destructive text-background scale-105 shadow-xl shadow-destructive/30"
-                : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/50 hover:border-destructive hover:shadow-lg hover:shadow-destructive/20"
+                ? "bg-destructive text-background"
+                : "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/50 hover:border-destructive hover:shadow-sm"
             }`}
           >
-            ↓ DOWN
+            <span className="text-base">↓</span>
+            <span>Down</span>
           </button>
         </div>
 
@@ -247,10 +250,8 @@ export default function TradingPage() {
             </button>
           </div>
 
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">
-              {inProgressTab ? "No active orders" : "No completed orders"}
-            </p>
+          <div className="py-4">
+            {inProgressTab ? <OrdersList pair={`${pair.toUpperCase()}/USDT`} /> : <OrdersList pair={`${pair.toUpperCase()}/USDT`} showCompleted />}
           </div>
         </div>
       </main>

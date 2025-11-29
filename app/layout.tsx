@@ -6,6 +6,7 @@ import Script from "next/script"
 import "./globals.css"
 import { AuthGuard } from "@/components/auth-guard"
 import { BalanceProvider } from "@/lib/context/BalanceContext"
+import { OrdersProvider } from "@/lib/context/OrdersContext"
 import { ThemeProvider } from "@/components/theme-provider"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -44,7 +45,9 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="ocean">
           <AuthGuard>
-            <BalanceProvider>{children}</BalanceProvider>
+            <OrdersProvider>
+              <BalanceProvider>{children}</BalanceProvider>
+            </OrdersProvider>
           </AuthGuard>
         </ThemeProvider>
         <Analytics />

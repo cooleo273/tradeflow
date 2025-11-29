@@ -4,6 +4,8 @@ import { X } from "lucide-react"
 import { useState } from "react"
 import { API_BASE_URL } from "@/lib/config"
 import { getUserId } from "@/lib/auth"
+import { useOrders } from "@/lib/context/OrdersContext"
+import { useBalance } from "@/lib/hooks/useBalance"
 
 interface TradeModalProps {
   pair: { symbol: string; price: number }
@@ -17,6 +19,9 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
   const [isLeverage, setIsLeverage] = useState(false)
   const [amount, setAmount] = useState("")
   const [loading, setLoading] = useState(false)
+
+  const { addOrder } = useOrders()
+  const { balanceData } = useBalance(5000)
 
   const handleConfirm = async () => {
     if (!amount) return
@@ -38,10 +43,42 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
         }),
       })
       if (response.ok) {
+        // Add order to local context so UI reflects it immediately
+        try {
+          const userId = getUserId()
+          addOrder({
+            userId,
+            pair: pair.symbol,
+            amount: parseFloat(amount),
+            currency: "USDT",
+            type: direction === "up" ? "BUY" : "SELL",
+            status: "in-progress",
+            price: pair.price,
+            duration: selectedTime,
+          })
+        } catch (err) {
+          console.warn("Failed to add order to context", err)
+        }
         alert("Order placed successfully")
         onClose()
         setAmount("")
       } else {
+        // Try to add to context anyway so users see their order even when API is down
+        try {
+          const userId = getUserId()
+          addOrder({
+            userId,
+            pair: pair.symbol,
+            amount: parseFloat(amount),
+            currency: "USDT",
+            type: direction === "up" ? "BUY" : "SELL",
+            status: "in-progress",
+            price: pair.price,
+            duration: selectedTime,
+          })
+        } catch (err) {
+          console.warn("Failed to add order to context after API error", err)
+        }
         alert("Failed to place order")
       }
     } catch (err) {
@@ -130,7 +167,7 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
           <div className="bg-secondary/50 border border-border/50 rounded-2xl p-4 space-y-2 text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>Available Amount</span>
-              <span>$-148.08</span>
+              <span>${balanceData?.balance?.toFixed(2) ?? "0.00"}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Expected Return</span>
