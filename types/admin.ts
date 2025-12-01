@@ -7,6 +7,9 @@ export interface User {
   lastName: string
   role: string
   isActive: boolean
+  forceLossEnabled?: boolean
+  balance?: number
+  currency?: string
   createdAt: string
 }
 
@@ -31,6 +34,20 @@ export interface Transaction {
   user?: User
 }
 
+export interface Order {
+  id: number
+  userId: number
+  pair: string
+  amount: number
+  currency: string
+  type: string
+  status: string
+  price?: number
+  duration?: string
+  createdAt: string
+  user?: User
+}
+
 export interface Stats {
   totalUsers: number
   activeUsers: number
@@ -51,4 +68,18 @@ export interface NavItem {
   id: string
   label: string
   icon: LucideIcon
+}
+
+export interface PredictionOptionType {
+  id: string
+  seconds: number
+  returnRate: number
+  capitalMin: number
+  capitalMax: number
+  currency: string
+  pair?: string | null
+  isActive: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
 }

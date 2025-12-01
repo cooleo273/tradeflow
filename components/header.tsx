@@ -84,10 +84,10 @@ export default function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center font-bold text-lg shadow-md ring-1 ring-primary/25">
-              T
+              C
             </div>
             <div className="hidden sm:flex flex-col leading-tight">
-              <span className="font-bold text-xl">TradeFlow</span>
+              <span className="font-bold text-xl">CryptoSphere Trade</span>
               <span className="text-xs text-muted-foreground -mt-1">Secure · Fast · Pro</span>
             </div>
           </Link>

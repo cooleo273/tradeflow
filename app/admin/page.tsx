@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { LayoutDashboard, Users as UsersIcon, CreditCard, ArrowLeftRight, Activity } from "lucide-react"
+import { LayoutDashboard, Users as UsersIcon, CreditCard, ArrowLeftRight, Activity, BarChart3 } from "lucide-react"
+import { PredictionsPanel } from "@/components/admin/predictions-panel"
+import { OrdersPanel } from "@/components/admin/orders-panel"
 import { API_BASE_URL } from "@/lib/config"
 import { AdminSidebar } from "@/components/admin/sidebar"
 import { MobileNav } from "@/components/admin/mobile-nav"
@@ -13,17 +15,19 @@ import { TransactionsTable } from "@/components/admin/transactions-table"
 import { AdminLoadingScreen } from "@/components/admin/loading-screen"
 import { User, Payment, Transaction, Stats, NavItem, SystemAlert } from "@/types/admin"
 
-const NAV_ITEMS: NavItem[] = [
+  const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "users", label: "User Management", icon: UsersIcon },
   { id: "payments", label: "Payment Approvals", icon: CreditCard },
   { id: "transactions", label: "Transactions", icon: ArrowLeftRight },
+    { id: "orders", label: "Orders", icon: Activity },
+  { id: "predictions", label: "Prediction Options", icon: BarChart3 },
 ]
 
 const SYSTEM_ALERTS: SystemAlert[] = [
   { id: 1, title: "Suspicious login detected", severity: "High", detail: "Unrecognized device for user test@gmail.com", timestamp: "2m ago" },
   { id: 2, title: "Settlement delay", severity: "Medium", detail: "USDT withdrawals queue exceeds SLA", timestamp: "14m ago" },
-  { id: 3, title: "New admin invitation", severity: "Low", detail: "Pending onboarding for ops@tradeflow.com", timestamp: "1h ago" },
+  { id: 3, title: "New admin invitation", severity: "Low", detail: "Pending onboarding for ops@cryptosphere.trade", timestamp: "1h ago" },
 ]
 
 export default function AdminDashboard() {
@@ -96,6 +100,82 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleForceLossToggle = async (userId: number, forceLossEnabled: boolean) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/force-loss`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ forceLossEnabled }),
+      })
+      response.ok ? fetchDashboardData() : alert("Failed to update trade outcome")
+    } catch (error) {
+      console.error("Failed to toggle force loss", error)
+    }
+  }
+
+  const handleForceLossAllUsers = async (nextValue: boolean) => {
+    try {
+      const token = localStorage.getItem("token")
+      const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+      const targets = users.filter(user => Boolean(user.forceLossEnabled) !== nextValue)
+      if (targets.length === 0) {
+        alert(`All users are already ${nextValue ? "in" : "out of"} force loss mode`)
+        return
+      }
+      await Promise.allSettled(
+        targets.map(user =>
+          fetch(`${API_BASE_URL}/users/${user.id}/force-loss`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify({ forceLossEnabled: nextValue }),
+          })
+        )
+      )
+      await fetchDashboardData()
+    } catch (error) {
+      console.error("Failed to force loss for all users", error)
+      alert("Failed to toggle force loss for all users")
+    }
+  }
+
+  const handleEditUserBalance = async (userId: number, currentBalance?: number) => {
+    const nextBalance = window.prompt("Enter the new balance (USDT)", currentBalance !== undefined ? String(currentBalance) : "")
+    if (nextBalance === null) return
+    const parsed = Number(nextBalance)
+    if (Number.isNaN(parsed)) {
+      alert("Please enter a valid number for the balance")
+      return
+    }
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/balance`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ balance: parsed }),
+      })
+      response.ok ? fetchDashboardData() : alert("Failed to update user balance")
+    } catch (error) {
+      console.error("Failed to update balance", error)
+      alert("Failed to update user balance")
+    }
+  }
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm("Delete this user? This cannot be undone.")) return
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      response.ok ? fetchDashboardData() : alert("Failed to delete user")
+    } catch (error) {
+      console.error("Failed to delete user", error)
+      alert("Failed to delete user")
+    }
+  }
+
   const handlePaymentAction = async (paymentId: number, action: "approve" | "reject", amount?: number) => {
     try {
       const token = localStorage.getItem("token")
@@ -119,15 +199,32 @@ export default function AdminDashboard() {
   ], [stats])
 
   const renderTab = () => {
+    const allForceLossEnabled = users.length > 0 && users.every(user => user.forceLossEnabled)
     switch (activeTab) {
       case "overview":
         return <OverviewPanel statCards={statCards} transactions={transactions} alerts={SYSTEM_ALERTS} />
       case "users":
-        return <UsersTable users={users} searchTerm={search} onSearch={setSearch} onToggleStatus={handleUserStatusChange} />
+        return (
+          <UsersTable
+            users={users}
+            searchTerm={search}
+            onSearch={setSearch}
+            onToggleStatus={handleUserStatusChange}
+            onToggleForceLoss={handleForceLossToggle}
+            allForceLossEnabled={allForceLossEnabled}
+            onForceLossAllToggle={handleForceLossAllUsers}
+            onEditBalance={handleEditUserBalance}
+            onDeleteUser={handleDeleteUser}
+          />
+        )
       case "payments":
         return <PaymentsPanel payments={payments} onAction={handlePaymentAction} proofBaseUrl={API_BASE_URL} />
       case "transactions":
         return <TransactionsTable transactions={transactions} />
+        case "orders":
+          return <OrdersPanel />
+      case "predictions":
+        return <PredictionsPanel />
       default:
         return null
     }

@@ -45,12 +45,12 @@ export default function RegisterPage() {
         <div className="card-premium">
           <div className="flex justify-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center font-bold text-3xl shadow-lg">
-              T
+              C
             </div>
           </div>
 
           <h1 className="text-3xl font-bold text-center mb-2">Create an account</h1>
-          <p className="text-center text-muted-foreground mb-8">Sign up to TradeFlow</p>
+          <p className="text-center text-muted-foreground mb-8">Sign up to CryptoSphere Trade</p>
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>

@@ -13,9 +13,9 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Trade Flow",
-  description: "TradeFlow – seamless crypto trading dashboard",
-  generator: "tradeflow",
+  title: "CryptoSphere Trade",
+  description: "CryptoSphere Trade – seamless crypto trading dashboard",
+  generator: "cryptosphere-trade",
   icons: {
     icon: [
       {

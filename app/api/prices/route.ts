@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail?id=${cmcId}`,
       {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; TradeFlow/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; CryptoSphereTrade/1.0)',
         },
       }
     )

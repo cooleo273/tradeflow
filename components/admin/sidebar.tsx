@@ -20,7 +20,7 @@ export function AdminSidebar({ navItems, activeTab, collapsed, onSelect, onExit,
     >
       <div className="px-4 py-6 border-b border-border flex items-center justify-between gap-2">
         <div className={collapsed ? "sr-only" : "block"}>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Trade Flow</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">CryptoSphere Trade</p>
           <p className="text-lg font-semibold">Admin Console</p>
           <Button onClick={onExit} className="mt-4 w-full" variant="ghost">
             Exit Console
@@ -40,10 +40,10 @@ export function AdminSidebar({ navItems, activeTab, collapsed, onSelect, onExit,
             <Button
               key={id}
               onClick={() => onSelect(id)}
-              className={`w-full flex items-center ${collapsed ? "justify-center" : ""} gap-3 text-sm font-medium ${
-                isActive ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
+              className={`w-full flex items-center ${collapsed ? "justify-center" : "justify-start"} gap-3 text-sm font-medium ${
+                isActive ? "" : "hover:bg-secondary"
               }`}
-              variant={isActive ? "primary" : "ghost"}
+              variant={isActive ? "default" : "ghost"}
             >
               <Icon className="h-4 w-4" />
               <span className={collapsed ? "hidden" : "block"}>{label}</span>

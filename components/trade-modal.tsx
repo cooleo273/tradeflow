@@ -1,7 +1,8 @@
 "use client"
 
 import { X } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { usePredictionOptions } from "@/lib/hooks/usePredictionOptions"
 import { API_BASE_URL } from "@/lib/config"
 import { getUserId } from "@/lib/auth"
 import { useOrders } from "@/lib/context/OrdersContext"
@@ -15,18 +16,64 @@ interface TradeModalProps {
 }
 
 export default function TradeModal({ pair, isOpen, onClose, direction }: TradeModalProps) {
-  const [selectedTime, setSelectedTime] = useState("30s")
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [isLeverage, setIsLeverage] = useState(false)
   const [amount, setAmount] = useState("")
   const [loading, setLoading] = useState(false)
+  const [amountError, setAmountError] = useState<string | null>(null)
 
   const { addOrder } = useOrders()
   const { balanceData } = useBalance(5000)
+  const pairId = pair?.symbol?.split("/")[0]?.toLowerCase()
+  const { options: predictionOptions } = usePredictionOptions(pairId)
+
+  useEffect(() => {
+    if (!selectedOptionId && predictionOptions && predictionOptions.length > 0) {
+      const first = predictionOptions[0]
+      setSelectedOptionId(first.optionId || first.id)
+    }
+  }, [predictionOptions, selectedOptionId])
+
+  const selectedOption = predictionOptions?.find((option) => (option.optionId || option.id) === selectedOptionId)
+
+  useEffect(() => {
+    if (!selectedOption || !amount) {
+      setAmountError(null)
+      return
+    }
+    const parsedAmount = parseFloat(amount)
+    if (isNaN(parsedAmount)) {
+      setAmountError("Enter a valid amount")
+      return
+    }
+    if (parsedAmount < selectedOption.capitalMin || parsedAmount > selectedOption.capitalMax) {
+      setAmountError(`Amount must be between ${selectedOption.capitalMin} and ${selectedOption.capitalMax}`)
+      return
+    }
+    setAmountError(null)
+  }, [amount, selectedOption])
 
   const handleConfirm = async () => {
-    if (!amount) return
+    if (!selectedOptionId || !selectedOption) {
+      alert("Please select a trade duration option")
+      return
+    }
+    if (!amount) {
+      setAmountError("Enter a valid amount")
+      return
+    }
     setLoading(true)
     try {
+      const parsedAmount = parseFloat(amount)
+      if (isNaN(parsedAmount)) {
+        setAmountError("Enter a valid amount")
+        return
+      }
+      if (parsedAmount < selectedOption.capitalMin || parsedAmount > selectedOption.capitalMax) {
+        setAmountError(`Amount must be between ${selectedOption.capitalMin} and ${selectedOption.capitalMax}`)
+        return
+      }
+      setAmountError(null)
       const token = localStorage.getItem("token")
       const userId = getUserId()
       const response = await fetch(`${API_BASE_URL}/orders`, {
@@ -37,7 +84,8 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
         },
         body: JSON.stringify({
           userId,
-          amount: parseFloat(amount),
+          optionId: selectedOption.optionId || selectedOption.id,
+          amount: parsedAmount,
           currency: "USDT", // Assuming trading in USDT
           type: direction === "up" ? "BUY" : "SELL",
         }),
@@ -49,12 +97,12 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
           addOrder({
             userId,
             pair: pair.symbol,
-            amount: parseFloat(amount),
+            amount: parsedAmount,
             currency: "USDT",
             type: direction === "up" ? "BUY" : "SELL",
             status: "in-progress",
             price: pair.price,
-            duration: selectedTime,
+            duration: `${selectedOption.seconds}s`,
           })
         } catch (err) {
           console.warn("Failed to add order to context", err)
@@ -69,12 +117,12 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
           addOrder({
             userId,
             pair: pair.symbol,
-            amount: parseFloat(amount),
+            amount: parsedAmount,
             currency: "USDT",
             type: direction === "up" ? "BUY" : "SELL",
             status: "in-progress",
             price: pair.price,
-            duration: selectedTime,
+            duration: `${selectedOption.seconds}s`,
           })
         } catch (err) {
           console.warn("Failed to add order to context after API error", err)
@@ -89,14 +137,6 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
   }
 
   if (!isOpen) return null
-
-  const timeOptions = [
-    { time: "30s", returnRate: 12.0, capital: "500 - 5000" },
-    { time: "50s", returnRate: 13.0, capital: "5000 - 10000" },
-    { time: "60s", returnRate: 14.0, capital: "10000 - 20000" },
-  ]
-
-  const selected = timeOptions.find((t) => t.time === selectedTime)
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -115,28 +155,36 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
         </div>
 
         <div className="space-y-3 mb-6">
-          {timeOptions.map((option) => (
-            <div
-              key={option.time}
-              onClick={() => setSelectedTime(option.time)}
-              className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${selectedTime === option.time
-                ? "bg-primary/10 border-primary"
-                : "bg-secondary/50 border-border hover:border-primary/50"
-                }`}
-            >
-              <div className="font-semibold text-foreground mb-2">{option.time}</div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground mb-1">Return Rate</p>
-                  <p className="font-semibold text-primary">{option.returnRate.toFixed(2)}%</p>
+          {predictionOptions?.length ? (
+            predictionOptions.map((option) => {
+              const optionKey = option.optionId || option.id
+              const isSelected = optionKey === selectedOptionId
+              return (
+                <div
+                  key={optionKey}
+                  onClick={() => setSelectedOptionId(optionKey)}
+                  className={`p-4 rounded-2xl cursor-pointer transition-all border-2 ${isSelected
+                    ? "bg-primary/10 border-primary"
+                    : "bg-secondary/50 border-border hover:border-primary/50"
+                    }`}
+                >
+                  <div className="font-semibold text-foreground mb-2">{option.seconds}s</div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground mb-1">Return Rate</p>
+                      <p className="font-semibold text-primary">{option.returnRate.toFixed(2)}%</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-muted-foreground mb-1">Capital Range</p>
+                      <p className="font-semibold text-accent">${option.capitalMin} - ${option.capitalMax}</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground mb-1">Capital Range</p>
-                  <p className="font-semibold text-accent">${option.capital}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+              )
+            })
+          ) : (
+            <p className="text-sm text-muted-foreground">No prediction options available.</p>
+          )}
         </div>
 
         <div className="flex items-center justify-between py-4 border-t border-border/50 mb-6">
@@ -154,14 +202,22 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="text-sm text-muted-foreground mb-2 block">Amount (min. 500 USDT)</label>
+            <label className="text-sm text-muted-foreground mb-2 block">Amount</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
+              min={selectedOption?.capitalMin}
+              max={selectedOption?.capitalMax}
               className="w-full px-4 py-3 bg-secondary border border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
+            {selectedOption && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Min {selectedOption.capitalMin} · Max {selectedOption.capitalMax}
+              </p>
+            )}
+            {amountError && <p className="text-xs text-destructive mt-1">{amountError}</p>}
           </div>
 
           <div className="bg-secondary/50 border border-border/50 rounded-2xl p-4 space-y-2 text-sm">
@@ -169,10 +225,12 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
               <span>Available Amount</span>
               <span>${balanceData?.balance?.toFixed(2) ?? "0.00"}</span>
             </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Expected Return</span>
-              <span>$0.00</span>
-            </div>
+            {selectedOption && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Return Target</span>
+                <span>{selectedOption.returnRate.toFixed(2)}%</span>
+              </div>
+            )}
             <div className="flex justify-between text-muted-foreground">
               <span>Transaction Fee</span>
               <span>$0.00</span>

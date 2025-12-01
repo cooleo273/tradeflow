@@ -46,9 +46,9 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center font-bold text-lg shadow-lg">
-              T
+              C
             </div>
-            <span className="font-bold text-xl hidden sm:inline">TradeFlow</span>
+            <span className="font-bold text-xl hidden sm:inline">CryptoSphere Trade</span>
           </div>
           <Link href="/" className="text-primary hover:text-primary/80 transition-colors">
             Back to Trading
