@@ -7,6 +7,7 @@ import TradeModal from "@/components/trade-modal"
 import { BarChart3, TrendingUp, TrendingDown } from "lucide-react"
 import OrdersList from "@/components/orders-list"
 import { fetchCryptoPrice } from "@/lib/price-service"
+import { useUserProfile } from "@/lib/hooks/useUserProfile"
 
 export default function TradingPage() {
   const [selectedPrediction, setSelectedPrediction] = useState<"up" | "down" | null>(null)
@@ -20,6 +21,8 @@ export default function TradingPage() {
   const [previousPrice, setPreviousPrice] = useState(0)
   const [loading, setLoading] = useState(true)
   const initialLoadedRef = useRef(false)
+  const { profile: userProfile } = useUserProfile()
+  const forceLossActive = Boolean(userProfile?.forceLossEnabled)
 
   const pair = { symbol: "BTC/USDT", price }
 
@@ -62,6 +65,7 @@ export default function TradingPage() {
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+
         {/* Price Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between">
           <div>
@@ -155,6 +159,7 @@ export default function TradingPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         direction={direction}
+        userProfile={userProfile}
       />
     </div>
   )

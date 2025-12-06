@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { LayoutDashboard, Users as UsersIcon, CreditCard, ArrowLeftRight, Activity, BarChart3 } from "lucide-react"
+import { LayoutDashboard, Users as UsersIcon, CreditCard, ArrowLeftRight, Activity, BarChart3, Wallet } from "lucide-react"
 import { PredictionsPanel } from "@/components/admin/predictions-panel"
 import { OrdersPanel } from "@/components/admin/orders-panel"
 import { API_BASE_URL } from "@/lib/config"
@@ -12,14 +12,16 @@ import { OverviewPanel } from "@/components/admin/overview-panel"
 import { UsersTable } from "@/components/admin/users-table"
 import { PaymentsPanel } from "@/components/admin/payments-panel"
 import { TransactionsTable } from "@/components/admin/transactions-table"
+import { WithdrawalsPanel } from "@/components/admin/withdrawals-panel"
 import { AdminLoadingScreen } from "@/components/admin/loading-screen"
-import { User, Payment, Transaction, Stats, NavItem, SystemAlert } from "@/types/admin"
+import { User, Payment, Transaction, Stats, NavItem, SystemAlert, Withdrawal } from "@/types/admin"
 
   const NAV_ITEMS: NavItem[] = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "users", label: "User Management", icon: UsersIcon },
   { id: "payments", label: "Payment Approvals", icon: CreditCard },
   { id: "transactions", label: "Transactions", icon: ArrowLeftRight },
+  { id: "withdrawals", label: "Withdrawals", icon: Wallet },
     { id: "orders", label: "Orders", icon: Activity },
   { id: "predictions", label: "Prediction Options", icon: BarChart3 },
 ]
@@ -38,6 +40,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
 
@@ -50,19 +53,24 @@ export default function AdminDashboard() {
   }, [router])
 
   const fetchDashboardData = async () => {
+    setLoading(true)
     try {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
-      const [usersRes, paymentsRes, transactionsRes] = await Promise.all([
+      const [usersRes, paymentsRes, transactionsRes, withdrawalsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/users`, { headers }),
         fetch(`${API_BASE_URL}/payments?status=PENDING`, { headers }),
         fetch(`${API_BASE_URL}/transactions`, { headers }),
+        fetch(`${API_BASE_URL}/withdrawals`, { headers }),
       ])
+      let loadedUsers: User[] = []
       if (usersRes.ok) {
         const usersData: User[] = await usersRes.json()
         setUsers(usersData)
         setStats(prev => ({ ...prev, totalUsers: usersData.length, activeUsers: usersData.filter(u => u.isActive).length }))
+        loadedUsers = usersData
       }
+      const userMap = new Map<number, User>(loadedUsers.map((user) => [user.id, user]))
       if (paymentsRes.ok) {
         const paymentsData: Payment[] = await paymentsRes.json()
         setPayments(paymentsData)
@@ -70,8 +78,23 @@ export default function AdminDashboard() {
       }
       if (transactionsRes.ok) {
         const txData: Transaction[] = await transactionsRes.json()
-        setTransactions(txData)
+        const enriched: Transaction[] = txData.map((tx) => ({
+          ...tx,
+          user: tx.user ?? userMap.get(tx.userId),
+        }))
+        setTransactions(enriched)
         setStats(prev => ({ ...prev, recentTransactions: txData.length }))
+      }
+      if (withdrawalsRes.ok) {
+        const withdrawalData: Withdrawal[] = await withdrawalsRes.json()
+        const enrichedWithdrawals = withdrawalData.map((wd) => {
+          const numericId = typeof wd.userId === "string" ? Number(wd.userId) : wd.userId
+          return {
+            ...wd,
+            user: wd.user ?? (Number.isFinite(numericId) ? userMap.get(numericId) : undefined),
+          }
+        })
+        setWithdrawals(enrichedWithdrawals)
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data", error)
@@ -191,6 +214,79 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleTransactionAction = async (transactionId: number, action: "approve" | "reject") => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        alert("Missing admin token, please re-login")
+        return
+      }
+      const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+      let body: Record<string, unknown> = {}
+      if (action === "approve") {
+        const txHash = window.prompt("Enter blockchain transaction hash (optional)")?.trim()
+        if (txHash) body = { txHash }
+      } else {
+        const reason = window.prompt("Provide a reason for rejection")?.trim()
+        if (!reason) {
+          alert("Rejection requires a reason")
+          return
+        }
+        body = { reason }
+      }
+      const response = await fetch(`${API_BASE_URL}/transactions/${transactionId}/${action}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      })
+      response.ok ? fetchDashboardData() : alert(`Failed to ${action} transaction`)
+    } catch (error) {
+      console.error(`Failed to ${action} transaction`, error)
+      alert(`Failed to ${action} transaction`)
+    }
+  }
+
+  const handleWithdrawalApprove = async (
+    withdrawalId: number | string,
+    payload: { amount: number; txHash?: string; adminNote?: string }
+  ) => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        alert("Missing admin token, please re-login")
+        return
+      }
+      const response = await fetch(`${API_BASE_URL}/withdrawals/${withdrawalId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      })
+      response.ok ? fetchDashboardData() : alert("Failed to approve withdrawal")
+    } catch (error) {
+      console.error("Failed to approve withdrawal", error)
+      alert("Failed to approve withdrawal")
+    }
+  }
+
+  const handleWithdrawalReject = async (withdrawalId: number | string, reason: string) => {
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        alert("Missing admin token, please re-login")
+        return
+      }
+      const response = await fetch(`${API_BASE_URL}/withdrawals/${withdrawalId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ reason }),
+      })
+      response.ok ? fetchDashboardData() : alert("Failed to reject withdrawal")
+    } catch (error) {
+      console.error("Failed to reject withdrawal", error)
+      alert("Failed to reject withdrawal")
+    }
+  }
+
   const statCards = useMemo(() => [
     { label: "Total Users", value: stats.totalUsers, icon: UsersIcon, helper: "+12 this week" },
     { label: "Active Users", value: stats.activeUsers, icon: Activity, helper: "Current trading" },
@@ -220,7 +316,21 @@ export default function AdminDashboard() {
       case "payments":
         return <PaymentsPanel payments={payments} onAction={handlePaymentAction} proofBaseUrl={API_BASE_URL} />
       case "transactions":
-        return <TransactionsTable transactions={transactions} />
+        return (
+          <TransactionsTable
+            transactions={transactions}
+            onApprove={(id) => void handleTransactionAction(id, "approve")}
+            onReject={(id) => void handleTransactionAction(id, "reject")}
+          />
+        )
+      case "withdrawals":
+        return (
+          <WithdrawalsPanel
+            withdrawals={withdrawals}
+            onApprove={handleWithdrawalApprove}
+            onReject={handleWithdrawalReject}
+          />
+        )
         case "orders":
           return <OrdersPanel />
       case "predictions":

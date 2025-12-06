@@ -1,31 +1,35 @@
 "use client"
 
 import { X } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { usePredictionOptions } from "@/lib/hooks/usePredictionOptions"
 import { API_BASE_URL } from "@/lib/config"
 import { getUserId } from "@/lib/auth"
 import { useOrders } from "@/lib/context/OrdersContext"
 import { useBalance } from "@/lib/hooks/useBalance"
+import type { UserProfile } from "@/lib/hooks/useUserProfile"
 
 interface TradeModalProps {
   pair: { symbol: string; price: number }
   isOpen: boolean
   onClose: () => void
   direction: "up" | "down"
+  userProfile?: UserProfile | null
 }
 
-export default function TradeModal({ pair, isOpen, onClose, direction }: TradeModalProps) {
+export default function TradeModal({ pair, isOpen, onClose, direction, userProfile }: TradeModalProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null)
   const [isLeverage, setIsLeverage] = useState(false)
   const [amount, setAmount] = useState("")
   const [loading, setLoading] = useState(false)
   const [amountError, setAmountError] = useState<string | null>(null)
 
-  const { addOrder } = useOrders()
+  const { addOrder, refetch } = useOrders()
   const { balanceData } = useBalance(5000)
   const pairId = pair?.symbol?.split("/")[0]?.toLowerCase()
   const { options: predictionOptions } = usePredictionOptions(pairId)
+  const forceLossActive = Boolean(userProfile?.forceLossEnabled)
+  const orderDirection = direction === "up" ? "UP" : "DOWN"
 
   useEffect(() => {
     if (!selectedOptionId && predictionOptions && predictionOptions.length > 0) {
@@ -36,17 +40,27 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
 
   const selectedOption = predictionOptions?.find((option) => (option.optionId || option.id) === selectedOptionId)
 
+  const parsedAmount = useMemo(() => {
+    const value = parseFloat(amount)
+    return Number.isFinite(value) ? value : NaN
+  }, [amount])
+
+  const expectedLoss = useMemo(() => {
+    if (!forceLossActive || !selectedOption || !Number.isFinite(parsedAmount)) return null
+    return (parsedAmount * selectedOption.returnRate) / 100
+  }, [forceLossActive, parsedAmount, selectedOption])
+
   useEffect(() => {
     if (!selectedOption || !amount) {
       setAmountError(null)
       return
     }
-    const parsedAmount = parseFloat(amount)
-    if (isNaN(parsedAmount)) {
+    const parsedAmt = parseFloat(amount)
+    if (isNaN(parsedAmt)) {
       setAmountError("Enter a valid amount")
       return
     }
-    if (parsedAmount < selectedOption.capitalMin || parsedAmount > selectedOption.capitalMax) {
+    if (parsedAmt < selectedOption.capitalMin || parsedAmt > selectedOption.capitalMax) {
       setAmountError(`Amount must be between ${selectedOption.capitalMin} and ${selectedOption.capitalMax}`)
       return
     }
@@ -64,12 +78,12 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
     }
     setLoading(true)
     try {
-      const parsedAmount = parseFloat(amount)
-      if (isNaN(parsedAmount)) {
+      const parsedAmt = parseFloat(amount)
+      if (isNaN(parsedAmt)) {
         setAmountError("Enter a valid amount")
         return
       }
-      if (parsedAmount < selectedOption.capitalMin || parsedAmount > selectedOption.capitalMax) {
+      if (parsedAmt < selectedOption.capitalMin || parsedAmt > selectedOption.capitalMax) {
         setAmountError(`Amount must be between ${selectedOption.capitalMin} and ${selectedOption.capitalMax}`)
         return
       }
@@ -85,28 +99,45 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
         body: JSON.stringify({
           userId,
           optionId: selectedOption.optionId || selectedOption.id,
-          amount: parsedAmount,
+          amount: parsedAmt,
           currency: "USDT", // Assuming trading in USDT
           type: direction === "up" ? "BUY" : "SELL",
+          direction: orderDirection,
         }),
       })
       if (response.ok) {
-        // Add order to local context so UI reflects it immediately
+        let createdOrder: any = null
         try {
-          const userId = getUserId()
-          addOrder({
-            userId,
-            pair: pair.symbol,
-            amount: parsedAmount,
-            currency: "USDT",
-            type: direction === "up" ? "BUY" : "SELL",
-            status: "in-progress",
-            price: pair.price,
-            duration: `${selectedOption.seconds}s`,
-          })
+          createdOrder = await response.json()
         } catch (err) {
-          console.warn("Failed to add order to context", err)
+          createdOrder = null
         }
+
+        if (createdOrder && createdOrder.id) {
+          const serverStatus = typeof createdOrder.status === "string" ? createdOrder.status.toLowerCase() : undefined
+          addOrder({
+            id: createdOrder.id.toString(),
+            userId,
+            pair: createdOrder.pair ?? pair.symbol,
+            amount: typeof createdOrder.amount === "number" ? createdOrder.amount : parsedAmt,
+            currency: createdOrder.currency ?? "USDT",
+            type: createdOrder.type === "SELL" ? "SELL" : direction === "up" ? "BUY" : "SELL",
+            direction: createdOrder.direction === "DOWN" ? "DOWN" : createdOrder.direction === "UP" ? "UP" : orderDirection,
+            status: serverStatus === "completed" ? "completed" : serverStatus === "cancelled" ? "cancelled" : "pending",
+            price: typeof createdOrder.price === "number" ? createdOrder.price : pair.price,
+            duration: createdOrder.duration ?? `${selectedOption.seconds}s`,
+            forcedLossExpected: createdOrder.forcedLossExpected ?? forceLossActive,
+            lossPercent: typeof createdOrder.lossPercent === "number" ? createdOrder.lossPercent : forceLossActive ? selectedOption.returnRate : undefined,
+            expectedLossAmount:
+              typeof createdOrder.expectedLossAmount === "number"
+                ? createdOrder.expectedLossAmount
+                : forceLossActive
+                ? (parsedAmt * selectedOption.returnRate) / 100
+                : undefined,
+            origin: "server",
+          })
+        }
+        refetch()
         alert("Order placed successfully")
         onClose()
         setAmount("")
@@ -117,12 +148,16 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
           addOrder({
             userId,
             pair: pair.symbol,
-            amount: parsedAmount,
+            amount: parsedAmt,
             currency: "USDT",
             type: direction === "up" ? "BUY" : "SELL",
-            status: "in-progress",
+            direction: orderDirection,
+            status: "pending",
             price: pair.price,
             duration: `${selectedOption.seconds}s`,
+            forcedLossExpected: forceLossActive,
+            lossPercent: forceLossActive ? selectedOption.returnRate : undefined,
+            expectedLossAmount: forceLossActive ? (parsedAmt * selectedOption.returnRate) / 100 : undefined,
           })
         } catch (err) {
           console.warn("Failed to add order to context after API error", err)
@@ -229,6 +264,12 @@ export default function TradeModal({ pair, isOpen, onClose, direction }: TradeMo
               <div className="flex justify-between text-muted-foreground">
                 <span>Return Target</span>
                 <span>{selectedOption.returnRate.toFixed(2)}%</span>
+              </div>
+            )}
+            {forceLossActive && selectedOption && Number.isFinite(parsedAmount) && parsedAmount > 0 && (
+              <div className="flex justify-between text-destructive">
+                <span>Forced Loss</span>
+                <span>- ${((parsedAmount * selectedOption.returnRate) / 100).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-muted-foreground">

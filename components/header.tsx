@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { API_BASE_URL } from "@/lib/config"
 import ThemeToggle from "@/components/theme-toggle"
-import { Search, Wallet } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Bell } from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
 import IconButton from "@/components/ui/icon-button"
 
@@ -14,6 +13,15 @@ export default function Header() {
   const [userInitials, setUserInitials] = useState("")
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userRole, setUserRole] = useState("")
+  const pathname = usePathname()
+
+  const navLinks = useMemo(
+    () => [
+      { label: "Home", href: "/" },
+      { label: "News", href: "/news" },
+    ],
+    []
+  )
 
   useEffect(() => {
     const computeInitials = () => {
@@ -79,49 +87,74 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-card/70 backdrop-blur border-b border-border sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center font-bold text-lg shadow-md ring-1 ring-primary/25">
-              C
-            </div>
-            <div className="hidden sm:flex flex-col leading-tight">
-              <span className="font-bold text-xl">CryptoSphere Trade</span>
-              <span className="text-xs text-muted-foreground -mt-1">Secure · Fast · Pro</span>
-            </div>
-          </Link>
+    <header className="sticky top-0 z-50 border-b border-white/5 bg-[#050914]/95 text-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center gap-6">
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#AB77FF] to-[#FF66C4] flex items-center justify-center text-xl font-black tracking-tight">
+            U
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="font-semibold text-lg">Uniswap</span>
+            <span className="text-[10px] uppercase tracking-[0.35em] text-white/50">Trade Network</span>
+          </div>
+        </Link>
 
-          <nav className="hidden md:flex gap-8">
-            <a href="/" className="text-foreground hover:text-primary transition-colors font-medium">
-              Home
-            </a>
-            {userRole === "ADMIN" && (
-              <Link href="/admin" className="text-red-400 hover:text-red-300 transition-colors font-medium">
-                Admin
+        <nav className="hidden md:flex flex-1 items-center justify-center gap-10 text-sm font-medium">
+          {navLinks.map(link => {
+            const isActive = pathname === link.href
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative pb-1 transition-colors ${
+                  isActive ? "text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                {link.label}
+                <span
+                  className={`absolute left-0 -bottom-1 h-[2px] rounded-full transition-all ${
+                    isActive ? "w-full bg-white" : "w-0 bg-transparent"
+                  }`}
+                />
               </Link>
-            )}
-          </nav>
-        </div>
+            )
+          })}
+          {userRole === "ADMIN" && (
+            <Link
+              href="/admin"
+              className={`relative pb-1 transition-colors ${
+                pathname?.startsWith("/admin") ? "text-white" : "text-rose-200/70 hover:text-rose-100"
+              }`}
+            >
+              Admin
+              <span
+                className={`absolute left-0 -bottom-1 h-[2px] rounded-full transition-all ${
+                  pathname?.startsWith("/admin") ? "w-full bg-rose-300" : "w-0"
+                }`}
+              />
+            </Link>
+          )}
+        </nav>
 
-        <div className="flex items-center gap-3">
-          {/* Search removed by design request - kept header clean */}
-          {/* Notifications removed (replaced with theme and wallet icon) */}
-          <IconButton aria-label="Open wallet">
-            <Wallet className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center gap-3 ml-auto">
+          <p className="hidden lg:block text-xs tracking-[0.3em] uppercase text-white/45">
+            Welcome to the Uniswap platform
+          </p>
+          <IconButton aria-label="Notifications" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">
+            <Bell className="h-4 w-4" />
           </IconButton>
           <ThemeToggle />
           {isAuthenticated && (
             <button
               onClick={handleLogout}
-              className="hidden md:inline px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-2xl transition-colors text-sm font-medium"
+              className="hidden md:inline px-3 py-2 rounded-full border border-white/15 text-xs font-semibold tracking-wide hover:border-white/40"
             >
               Logout
             </button>
           )}
-                <Link href="/profile">
-                  <Avatar>{userInitials}</Avatar>
-                </Link>
+          <Link href="/profile">
+            <Avatar className="ring-1 ring-white/10 bg-white/10 text-white">{userInitials}</Avatar>
+          </Link>
         </div>
       </div>
     </header>

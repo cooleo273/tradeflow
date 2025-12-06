@@ -10,6 +10,7 @@ export interface User {
   forceLossEnabled?: boolean
   balance?: number
   currency?: string
+  balances?: Record<string, number>
   createdAt: string
 }
 
@@ -30,6 +31,27 @@ export interface Transaction {
   amount: number
   transactionType: string
   status: string
+  currency?: string
+  address?: string
+  network?: string
+  txHash?: string
+  note?: string
+  createdAt: string
+  user?: User
+}
+
+export interface Withdrawal {
+  id: number | string
+  userId: number | string
+  amount: number
+  asset: string
+  network: string
+  address: string
+  status: string
+  txHash?: string
+  memo?: string
+  userNote?: string
+  passcode?: string
   createdAt: string
   user?: User
 }
@@ -41,11 +63,19 @@ export interface Order {
   amount: number
   currency: string
   type: string
+  direction?: "UP" | "DOWN"
   status: string
   price?: number
   duration?: string
   createdAt: string
   user?: User
+  result?: "WIN" | "LOSS"
+  outcome?: "WIN" | "LOSS"
+  settledLossAmount?: number
+  settledPayout?: number
+  forcedLossExpected?: boolean
+  lossPercent?: number
+  expectedLossAmount?: number
 }
 
 export interface Stats {

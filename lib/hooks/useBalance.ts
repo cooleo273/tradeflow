@@ -10,7 +10,7 @@ interface BalanceData {
   currency: string
 }
 
-export function useBalance(refreshInterval: number = 5000) {
+export function useBalance(refreshInterval?: number) {
   // Prefer shared context if available to avoid duplicate polling/fetches
   const context = useContext(BalanceContext)
   if (context) {
@@ -64,12 +64,11 @@ export function useBalance(refreshInterval: number = 5000) {
   }, [])
 
   useEffect(() => {
-    // Fetch balance immediately on mount
     fetchBalance()
 
-    // Set up periodic refresh
-    const interval = setInterval(fetchBalance, refreshInterval)
+    if (!refreshInterval) return
 
+    const interval = setInterval(fetchBalance, refreshInterval)
     return () => clearInterval(interval)
   }, [fetchBalance, refreshInterval])
 

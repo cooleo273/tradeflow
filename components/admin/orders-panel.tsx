@@ -33,28 +33,51 @@ export function OrdersPanel() {
 
   // actions removed: admin now views orders read-only here; use separate endpoints for bulk actions if needed
 
-  const renderRow = (order: Order) => (
-    <div key={order.id} className="border border-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 transition-shadow hover:shadow-lg hover:border-primary/30 bg-card/40">
-      <div className="flex-1 w-full">
-        <div className="flex items-start justify-between mb-2">
-          <div>
-            <p className="font-medium truncate max-w-xs">{order.user?.firstName || order.user?.email || `User ${order.userId}`} {order.user?.lastName ? order.user.lastName : ''}</p>
-            <p className="text-sm text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</p>
+  const renderRow = (order: Order) => {
+    const normalizedStatus = order.status?.toString().toLowerCase()
+    const normalizedResult = (order.result ?? order.outcome)?.toString().toUpperCase() as "WIN" | "LOSS" | undefined
+    const statusLabel = normalizedResult ?? (normalizedStatus ? normalizedStatus.toUpperCase() : "PENDING")
+    const badgeClass = normalizedResult === "LOSS"
+      ? "bg-red-500/15 text-red-400"
+      : normalizedResult === "WIN" || normalizedStatus === "completed"
+        ? "bg-green-500/15 text-green-400"
+        : normalizedStatus === "cancelled"
+          ? "bg-red-500/15 text-red-400"
+          : "bg-yellow-500/20 text-yellow-400"
+
+    return (
+      <div key={order.id} className="border border-border rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 transition-shadow hover:shadow-lg hover:border-primary/30 bg-card/40">
+        <div className="flex-1 w-full">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="font-medium truncate max-w-xs">{order.user?.firstName || order.user?.email || `User ${order.userId}`} {order.user?.lastName ? order.user.lastName : ''}</p>
+              <p className="text-sm text-muted-foreground">{new Date(order.createdAt).toLocaleString()}</p>
+            </div>
+            <span className={`px-2 py-1 rounded text-xs font-semibold ${badgeClass}`}>{statusLabel}</span>
           </div>
-          <span className={`px-2 py-1 ${order.status === 'completed' ? 'bg-green-500/20 text-green-400' : order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'} rounded text-xs`}>{order.status}</span>
-        </div>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-sm items-center">
-          <div><span className="text-muted-foreground">Pair</span><p className="font-semibold">{order.pair}</p></div>
-          <div><span className="text-muted-foreground">Amount</span><p className="font-semibold">${order.amount} {order.currency}</p></div>
-          <div><span className="text-muted-foreground">Type</span><p className="font-semibold">{order.type}</p></div>
-          <div><span className="text-muted-foreground">Price</span><p className="font-semibold">{order.price ?? '--'}</p></div>
-          <div className="flex gap-2 justify-end">
-            {/* action buttons removed per requirement */}
+            <div><span className="text-muted-foreground">Pair</span><p className="font-semibold">{order.pair}</p></div>
+            <div><span className="text-muted-foreground">Amount</span><p className="font-semibold">${order.amount} {order.currency}</p></div>
+            <div><span className="text-muted-foreground">Type</span><p className="font-semibold">{order.type}{order.direction ? ` (${order.direction})` : ""}</p></div>
+            <div><span className="text-muted-foreground">Price</span><p className="font-semibold">{order.price ?? "--"}</p></div>
+            <div>
+              <span className="text-muted-foreground">Result</span>
+              <p className="font-semibold">
+                {normalizedResult ? normalizedResult : normalizedStatus === "completed" ? "SETTLED" : "PENDING"}
+                {normalizedResult === "LOSS" && typeof order.settledLossAmount === "number" && ` · -$${order.settledLossAmount.toFixed(2)}`}
+                {normalizedResult === "WIN" && typeof order.settledPayout === "number" && ` · $${order.settledPayout.toFixed(2)}`}
+              </p>
+            </div>
           </div>
+          {order.forcedLossExpected && (
+            <p className="mt-2 text-xs text-destructive">
+              Forced loss applied · {typeof order.lossPercent === "number" ? `${order.lossPercent.toFixed(2)}%` : "Configured"}
+            </p>
+          )}
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="space-y-6">

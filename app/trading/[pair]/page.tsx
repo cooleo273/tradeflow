@@ -9,6 +9,7 @@ import { useParams } from "next/navigation"
 
 import { fetchCryptoPrice, PriceData } from "@/lib/price-service"
 import OrdersList from "@/components/orders-list"
+import { useUserProfile } from "@/lib/hooks/useUserProfile"
 
 interface DisplayPriceData {
   symbol: string
@@ -85,6 +86,8 @@ export default function TradingPage() {
   const [priceData, setPriceData] = useState<DisplayPriceData | null>(null)
   const [loading, setLoading] = useState(true)
   const initialLoadedRef = useRef(false)
+  const { profile: userProfile } = useUserProfile()
+  const forceLossActive = Boolean(userProfile?.forceLossEnabled)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -265,6 +268,7 @@ export default function TradingPage() {
           isOpen={showTradeModal}
           onClose={() => setShowTradeModal(false)}
           direction={selectedPrediction}
+          userProfile={userProfile}
         />
       )}
     </div>

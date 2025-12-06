@@ -7,24 +7,43 @@ import { getUserId } from "@/lib/auth"
 
 export default function WithdrawPage() {
   const [selectedCrypto, setSelectedCrypto] = useState("BTC")
+  const networkDefaults: Record<string, string> = {
+    BTC: "BTC",
+    ETH: "ERC20",
+    USDT: "TRC20",
+  }
   const [amount, setAmount] = useState("")
   const [withdrawAddress, setWithdrawAddress] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
 
   const cryptoOptions = ["BTC", "ETH", "USDT"]
+  const selectedNetwork = networkDefaults[selectedCrypto] || "USDT"
 
   const handleWithdraw = async () => {
     if (!amount || !withdrawAddress) {
       setError("Please enter amount and address")
+      setSuccess("")
+      return
+    }
+    const parsedAmount = parseFloat(amount)
+    if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError("Enter a valid amount greater than zero")
+      setSuccess("")
       return
     }
     setLoading(true)
     setError("")
+    setSuccess("")
     try {
       const token = localStorage.getItem("token")
       const userId = getUserId()
-      const response = await fetch(`${API_BASE_URL}/transactions`, {
+      if (!token || !userId) {
+        setError("Please log in again to withdraw")
+        return
+      }
+      const response = await fetch(`${API_BASE_URL}/withdrawals`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,21 +51,24 @@ export default function WithdrawPage() {
         },
         body: JSON.stringify({
           userId,
-          amount: parseFloat(amount),
+          amount: parsedAmount,
           currency: selectedCrypto,
-          transactionType: "SELL",
+          asset: selectedCrypto,
           address: withdrawAddress,
+          network: selectedNetwork?.toUpperCase(),
         }),
       })
-      if (response.ok) {
-        alert("Withdrawal request submitted successfully")
-        setAmount("")
-        setWithdrawAddress("")
-      } else {
-        const errorData = await response.json()
-        setError(errorData.message || "Failed to submit withdrawal")
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const message = errorData?.message || "Failed to submit withdrawal"
+        setError(message)
+        return
       }
+      setSuccess("Withdrawal request submitted successfully")
+      setAmount("")
+      setWithdrawAddress("")
     } catch (err) {
+      console.error("Failed to submit withdrawal", err)
       setError("Failed to submit withdrawal")
     } finally {
       setLoading(false)
@@ -146,6 +168,9 @@ export default function WithdrawPage() {
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-2xl text-sm mb-4">{error}</div>
+        )}
+        {!error && success && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-3 rounded-2xl text-sm mb-4">{success}</div>
         )}
 
         {/* CTA Button */}

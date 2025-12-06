@@ -14,12 +14,7 @@ export default function ProfilePage() {
   // Insights removed per request; clean header
 
   const settingsLinks = [
-    {
-      label: "Real Name Authentication",
-      icon: ShieldCheck,
-      description: "Verify your identity and unlock higher limits",
-      href: "/profile/real-name",
-    },
+    // Real Name Authentication card intentionally hidden per product request (Dec 2025)
     {
       label: "Billing History",
       icon: Clock,
@@ -74,13 +69,13 @@ export default function ProfilePage() {
             <div className="flex-1 flex items-center justify-center lg:justify-end">
               <div className="hidden lg:flex items-center gap-3">
                 <Link href="/deposit">
-                  <Button variant="primary" className="px-4 py-2">Deposit</Button>
+                  <Button className="px-4 py-2">Deposit</Button>
                 </Link>
                 <Link href="/withdraw">
                   <Button variant="default" className="px-4 py-2">Withdraw</Button>
                 </Link>
                 <Link href="/trading">
-                  <Button variant="primary" className="px-4 py-2">Start Trading</Button>
+                  <Button className="px-4 py-2">Start Trading</Button>
                 </Link>
               </div>
               <div className="lg:hidden text-sm text-muted-foreground">Welcome back — explore your account below</div>
@@ -89,7 +84,7 @@ export default function ProfilePage() {
         </section>
 
         {/* Account Balance & quick actions */}
-        <section className="grid xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-8 mb-10">
+        <section className="grid xl:grid-cols-1 gap-8 mb-10">
           <div className="rounded-3xl border border-border/70 bg-gradient-to-br from-blue-500/10 via-indigo-500/10 to-primary/10 p-8 shadow-lg">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div>
@@ -102,7 +97,7 @@ export default function ProfilePage() {
                   ) : error ? (
                     <span className="text-red-300 text-base">{error}</span>
                   ) : (
-                    `$${(balanceData?.balance ?? 0).toFixed(2)} ${balanceData?.currency || "USDT"}`
+                    `$${(balanceData?.balance ?? 0).toFixed(2)} USDT`
                   )}
                 </h2>
                 <p className="text-xs text-blue-100/80 mt-2">
@@ -111,42 +106,18 @@ export default function ProfilePage() {
               </div>
               <div className="flex flex-col gap-3 w-full lg:w-auto">
                 <Link href="/deposit" className="w-full">
-                  <Button variant="primary" className="w-full rounded-2xl shadow-md">Deposit</Button>
+                  <Button className="w-full rounded-2xl shadow-md">Deposit</Button>
                 </Link>
                 <Link href="/withdraw" className="w-full">
                   <Button variant="default" className="w-full rounded-2xl border border-white/10 bg-white/5 text-white">Withdraw</Button>
                 </Link>
                 <Link href="/trading" className="w-full">
-                  <Button variant="primary" className="w-full rounded-2xl shadow-md">Start Trading</Button>
+                  <Button className="w-full rounded-2xl shadow-md">Start Trading</Button>
                 </Link>
               </div>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card/60 p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Security status</p>
-                <p className="text-lg font-semibold">High</p>
-              </div>
-              <ShieldCheck className="h-8 w-8 text-emerald-400" />
-            </div>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" /> 2FA enabled
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" /> Withdrawal whitelist active
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" /> Device monitoring running
-              </li>
-            </ul>
-            <Link href="/profile/real-name" className="inline-flex items-center gap-2 text-sm text-primary font-medium">
-              Manage verification
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
         </section>
 
         {/* Settings cards */}

@@ -16,7 +16,7 @@ export default function BalanceCard() {
             {loading ? (
               <div className="h-9 w-40 bg-secondary rounded-md animate-pulse" />
             ) : (
-              `${balanceData?.balance ?? 0} ${balanceData?.currency || "USDT"}`
+              `${balanceData?.balance ?? 0} USDT`
             )}
           </div>
         </div>
